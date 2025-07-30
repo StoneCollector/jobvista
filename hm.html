@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Find Jobs - Home | JobVista</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-20 bg-blue-700 flex flex-col justify-between items-center py-8">
+      <div>
+        <div class="mb-8">
+          <span class="text-white text-2xl font-bold">💼</span>
+        </div>
+        <nav class="flex flex-col items-center space-y-8">
+          <button class="text-blue-200 hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 12l2-2m0 0l7-7l7 7M13 5v6h6m6 6v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+          </button>
+        </nav>
+      </div>
+      <!-- <button class="bg-blue-900 p-2 rounded-full text-white mt-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path d="M17 16l4-4m0 0l-4-4m4 4H7"/>
+        </svg>
+      </button> -->
+    </aside>
+
+    <!-- Main content -->
+    <div class="flex-1 flex flex-col">
+      <!-- Top bar -->
+      <header class="flex items-center bg-white px-6 py-4 shadow">
+        <div class="flex-1 flex items-center">
+          <span class="text-blue-700 font-extrabold text-2xl mr-3"><a href="Home.html">JobVista<sup class="text-sm align-super font-normal">®</a></sup></span>
+          <nav class="hidden md:flex items-center gap-6 ml-8">
+            <a href="#" class="text-gray-700 hover:text-blue-700 font-semibold">Find Jobs</a>
+            <a href="#" class="text-gray-700 hover:text-blue-700 font-semibold">Company Reviews</a>
+            <a href="#" class="text-gray-700 hover:text-blue-700 font-semibold">Salaries</a>
+            <a href="post_job.html" class="text-gray-700 hover:text-blue-700 font-semibold">Make Job Listing</a>
+          </nav>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="Login.html" class="px-5 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition">Log In</a>
+          <a href="Signup.html" class="px-5 py-2 bg-white text-blue-600 rounded border hover:bg-blue-50 font-semibold transition">Sign Up</a>
+        </div>
+      </header>
+
+      <!-- Search -->
+      <section class="bg-blue-700 py-10 px-8">
+        <div class="max-w-3xl">
+          <h2 class="text-3xl font-bold text-white mb-4">Find your next job</h2>
+          <form class="flex gap-3" autocomplete="off">
+            <div class="flex-1">
+              <input class="w-full rounded-l px-4 py-3 focus:outline-none text-lg"
+                type="text" placeholder="Job title, keywords, or company" />
+            </div>
+            <div class="flex-1">
+              <input class="w-full rounded-r px-4 py-3 focus:outline-none text-lg"
+                type="text" placeholder="City, state, or pin code" />
+            </div>
+            <button class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded transition">Find Jobs</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Jobs Listing -->
+      <main class="flex-1 overflow-y-auto px-5 md:px-16 py-8 bg-gray-50">
+        <div class="max-w-4xl mx-auto">
+          <!-- Recommended Jobs Section -->
+          <h2 class="text-2xl font-semibold mb-6 text-blue-700">Latest Jobs</h2>
+          <div class="flex flex-col gap-5">
+            <!-- Job Card 1 -->
+            <div class="bg-white shadow rounded p-6 flex flex-col md:flex-row justify-between items-start md:items-center hover:shadow-xl hover:animate-pulse ease-linear">
+              <div>
+                <h3 class="font-bold text-lg text-blue-800">Software Engineer</h3>
+                <p class="text-gray-600">Google &ndash; Bengaluru, Karnataka</p>
+                <div class="flex space-x-2 mt-2 text-xs text-gray-500">
+                  <span class="border px-2 rounded">Full-time</span>
+                  <span class="border px-2 rounded">Remote</span>
+                  <span class="border px-2 rounded">₹20,00,000 a year</span>
+                </div>
+              </div>
+              <div class="mt-4 md:mt-0 flex items-center gap-3">
+                <a href="listing.html" class="text-blue-700 font-semibold hover:underline">View</a>
+                <span class="text-gray-400">Posted 2 days ago</span>
+              </div>
+            </div>
+            <!-- Job Card 2 -->
+            <div class="bg-white shadow rounded p-6 flex flex-col md:flex-row justify-between items-start md:items-center hover:shadow-xl hover:animate-pulse ease-linear">
+              <div>
+                <h3 class="font-bold text-lg text-blue-800">Accountant</h3>
+                <p class="text-gray-600">Tata Consultancy Services &ndash; Mumbai, Maharashtra</p>
+                <div class="flex space-x-2 mt-2 text-xs text-gray-500">
+                  <span class="border px-2 rounded">Part-time</span>
+                  <span class="border px-2 rounded">On-site</span>
+                  <span class="border px-2 rounded">₹5,00,000 a year</span>
+                </div>
+              </div>
+              <div class="mt-4 md:mt-0 flex items-center gap-3">
+                <a href="#" class="text-blue-700 font-semibold hover:underline">View</a>
+                <span class="text-gray-400">Posted 4 days ago</span>
+              </div>
+            </div>
+            <!-- More job cards can go here -->
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

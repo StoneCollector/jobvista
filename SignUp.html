@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white rounded-lg shadow-md p-8 w-full max-w-md mx-auto">
+    <h2 class="text-center text-2xl font-semibold mb-6">Sign Up</h2>
+    <form>
+      <div class="mb-4">
+        <label class="block text-sm mb-1" for="username">Username</label>
+        <input id="username" type="text" placeholder="Username"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+          maxlength="150" />
+        <p class="text-xs text-gray-500 mt-1">
+          Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
+        </p>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm mb-1" for="email">Email address</label>
+        <input id="email" type="email" placeholder="Email address"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+        <p class="text-xs text-gray-500 mt-1">
+          Required. Please enter a valid email address.
+        </p>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm mb-1" for="dob">Date of Birth</label>
+        <input id="dob" type="date" placeholder="dd-mm-yyyy"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+        <p class="text-xs text-gray-500 mt-1">
+          Required. Please enter a valid date of birth.
+        </p>
+      </div>
+      <div class="mb-2">
+        <label class="block text-sm mb-1" for="password">Password</label>
+        <input id="password" type="password" placeholder="Password"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+        <ul class="mt-2 text-xs text-gray-500 space-y-1 list-disc pl-5">
+          <li>Your password can't be too similar to your other personal information.</li>
+          <li>Your password must contain at least 8 characters.</li>
+          <li>Your password can't be a commonly used password.</li>
+          <li>Your password can't be entirely numeric.</li>
+        </ul>
+      </div>
+      <div class="mb-4 mt-3">
+        <label class="block text-sm mb-1" for="password2">Password Confirmation</label>
+        <input id="password2" type="password" placeholder="Confirm password"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+        <p class="text-xs text-gray-500 mt-1">
+          Enter the same password as before, for verification.
+        </p>
+      </div>
+      <button type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 transition mb-3">
+        Sign Up
+      </button>
+      <div class="text-center text-xs text-gray-500">
+        Already Registered? <a href="Login.html" class="text-blue-600 hover:underline">Login here</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
