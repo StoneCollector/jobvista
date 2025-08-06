@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Styles for email suggestion dropdown */
+    .suggestion-list {
+      border: 1px solid #d1d5db;
+      background: white;
+      position: absolute;
+      width: 100%;
+      z-index: 10;
+      border-radius: 0.375rem;
+      box-shadow: 0 1px 2px #0001;
+    }
+    .suggestion-item {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+    .suggestion-item.active, .suggestion-item:hover {
+      background: #e0e7ff;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white rounded-lg shadow-md p-8 w-full max-w-md mx-auto">
+    <h2 class="text-center text-2xl font-semibold mb-6">Sign Up</h2>
+    <form id="signupForm" novalidate autocomplete="off">
+      <div class="mb-4 relative">
+        <label class="block text-sm mb-1" for="username">Username</label>
+        <input id="username" type="text" placeholder="Username"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+          maxlength="25" autocomplete="username" />
+        <p class="text-xs text-gray-500 mt-1">
+          Required. 25 characters or fewer. Letters, digits and @/./+/-/_ only.
+        </p>
+        <p id="usernameError" class="text-xs text-red-500 mt-1"></p>
+      </div>
+      <div class="mb-4 relative">
+        <label class="block text-sm mb-1" for="email">Email address</label>
+        <input id="email" type="email" placeholder="Email address"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+          autocomplete="off" />
+        <!-- Email autocomplete suggestion will show here -->
+        <div id="emailSuggestions" class="suggestion-list hidden"></div>
+        <p class="text-xs text-gray-500 mt-1">
+          Required. Please enter a valid email address.
+        </p>
+        <p id="emailError" class="text-xs text-red-500 mt-1"></p>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm mb-1" for="dob">Date of Birth</label>
+        <input id="dob" type="date" placeholder="dd-mm-yyyy"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+        <p class="text-xs text-gray-500 mt-1">
+          Required. Please enter a valid date of birth.
+        </p>
+        <p id="dobError" class="text-xs text-red-500 mt-1"></p>
+      </div>
+      <div class="mb-2">
+        <label class="block text-sm mb-1" for="password">Password</label>
+        <input id="password" type="password" placeholder="Password"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" autocomplete="new-password" />
+        <ul class="mt-2 text-xs text-gray-500 space-y-1 list-disc pl-5">
+          <li>Your password can't be too similar to your other personal information.</li>
+          <li>Your password must contain at least 8 characters.</li>
+          <li>Your password must have at least one number AND one symbol.</li>
+          <li>Your password can't be a commonly used password.</li>
+          <li>Your password can't be entirely numeric.</li>
+        </ul>
+        <p id="passwordError" class="text-xs text-red-500 mt-1"></p>
+      </div>
+      <div class="mb-4 mt-3">
+        <label class="block text-sm mb-1" for="password2">Password Confirmation</label>
+        <input id="password2" type="password" placeholder="Confirm password"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" autocomplete="new-password" />
+        <p class="text-xs text-gray-500 mt-1">
+          Enter the same password as before, for verification.
+        </p>
+        <p id="password2Error" class="text-xs text-red-500 mt-1"></p>
+      </div>
+      <button type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 transition mb-3">
+        Sign Up
+      </button>
+      <div class="text-center text-xs text-gray-500">
+        Already Registered? <a href="Login.html" class="text-blue-600 hover:underline">Login here</a>
+      </div>
+    </form>
+  </div>
+  <script>
+    // PASSWORD & FORM VALIDATION CODE
+    const form = document.getElementById('signupForm');
+    const usernameField = document.getElementById('username');
+    const emailField = document.getElementById('email');
+    const dobField = document.getElementById('dob');
+    const passwordField = document.getElementById('password');
+    const password2Field = document.getElementById('password2');
+
+    const usernameError = document.getElementById('usernameError');
+    const emailError = document.getElementById('emailError');
+    const dobError = document.getElementById('dobError');
+    const passwordError = document.getElementById('passwordError');
+    const password2Error = document.getElementById('password2Error');
+
+    const commonPasswords = [
+      "password", "12345678", "123456789", "qwerty", "abc123", "11111111", "password1", "123456", "1234567"
+    ];
+
+    // Helper functions for validation
+    function validateUsername(username) {
+      if (!username) return "Username is required.";
+      if (username.length > 25) return "Username must be at most 25 characters.";
+      if (!/^[\w.@+-]+$/.test(username)) {
+        return "Only letters, digits and @/./+/-/_ allowed.";
+      }
+      return "";
+    }
+
+    function validateEmail(email) {
+      if (!email) return "Email is required.";
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!regex.test(email)) return "Enter a valid email address.";
+      return "";
+    }
+
+    function validateDOB(dob) {
+      if (!dob) return "Date of birth is required.";
+      const dobDate = new Date(dob);
+      const now = new Date();
+      if (isNaN(dobDate.getTime())) return "Enter a valid date of birth.";
+      const minAge = 13;
+      const minDOB = new Date();
+      minDOB.setFullYear(now.getFullYear() - minAge);
+      if (dobDate > minDOB) return "You must be at least 13 years old.";
+      return "";
+    }
+
+    function validatePassword(password, username, email) {
+      if (!password) return "Password is required.";
+      if (password.length < 8) return "Password must be at least 8 characters.";
+      if (!/[0-9]/.test(password))
+        return "Password must have at least one number.";
+      if (!/[^A-Za-z0-9]/.test(password))
+        return "Password must have at least one symbol (e.g. !@#$%).";
+      if (/^\d+$/.test(password)) return "Password can't be entirely numeric.";
+      for (let c of commonPasswords) {
+        if (password.toLowerCase() === c) return "Password is too common.";
+      }
+      // Too similar to username or email: check for substrings of at least 3 chars
+      const lowerPwd = password.toLowerCase();
+      if (username && username.length >= 3 && lowerPwd.includes(username.toLowerCase())) {
+        return "Password is too similar to your username.";
+      }
+      if (email && email.length >= 3) {
+        const [emailName] = email.toLowerCase().split("@");
+        if (lowerPwd.includes(emailName)) {
+          return "Password is too similar to your email address.";
+        }
+      }
+      return "";
+    }
+
+    function validatePassword2(pass1, pass2) {
+      if (!pass2) return "Password confirmation is required.";
+      if (pass1 !== pass2) return "Passwords do not match.";
+      return "";
+    }
+
+    form.addEventListener('submit', function(e) {
+      let valid = true;
+      // Clear errors
+      usernameError.textContent = "";
+      emailError.textContent = "";
+      dobError.textContent = "";
+      passwordError.textContent = "";
+      password2Error.textContent = "";
+
+      // Username validation
+      const usernameMsg = validateUsername(usernameField.value.trim());
+      if (usernameMsg) {
+        usernameError.textContent = usernameMsg;
+        valid = false;
+      }
+
+      // Email validation
+      const emailMsg = validateEmail(emailField.value.trim());
+      if (emailMsg) {
+        emailError.textContent = emailMsg;
+        valid = false;
+      }
+
+      // DOB validation
+      const dobMsg = validateDOB(dobField.value.trim());
+      if (dobMsg) {
+        dobError.textContent = dobMsg;
+        valid = false;
+      }
+
+      // Password validation
+      const passwordMsg = validatePassword(
+        passwordField.value,
+        usernameField.value.trim(),
+        emailField.value.trim()
+      );
+      if (passwordMsg) {
+        passwordError.textContent = passwordMsg;
+        valid = false;
+      }
+
+      // Password confirmation
+      const password2Msg = validatePassword2(passwordField.value, password2Field.value);
+      if (password2Msg) {
+        password2Error.textContent = password2Msg;
+        valid = false;
+      }
+
+      if (!valid) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+
+    ////////// EMAIL DOMAIN AUTOCOMPLETE //////////
+    const emailSuggestionsDiv = document.getElementById('emailSuggestions');
+    const emailDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
+    let activeSuggestion = -1;
+
+    // Helper: get local part and current domain, if any
+    function splitEmail(input) {
+      const idx = input.indexOf('@');
+      if (idx === -1) return {local: input, domain: ''};
+      return {
+        local: input.slice(0, idx),
+        domain: input.slice(idx + 1)
+      };
+    }
+
+    emailField.addEventListener('input', function(e) {
+      const value = e.target.value;
+      const atIdx = value.indexOf('@');
+      if (atIdx === -1) {
+        emailSuggestionsDiv.classList.add('hidden');
+        return;
+      }
+      const {local, domain} = splitEmail(value);
+      // If already a domain is entered, filter suggestions
+      const filtered = emailDomains.filter(d => d.startsWith(domain));
+      // Show only if there are matches and an '@'
+      if (filtered.length > 0 && value.endsWith('@') || (domain && filtered.length > 0)) {
+        emailSuggestionsDiv.innerHTML = '';
+        filtered.forEach((d, idx) => {
+          const div = document.createElement('div');
+          div.className = 'suggestion-item' + (idx === 0 ? ' active' : '');
+          div.textContent = local + '@' + d;
+          div.tabIndex = 0;
+          div.addEventListener('mousedown', function(ev) {
+            ev.preventDefault(); // Prevents input blur
+            emailField.value = local + '@' + d;
+            emailSuggestionsDiv.classList.add('hidden');
+            emailField.focus();
+          });
+          emailSuggestionsDiv.appendChild(div);
+        });
+        emailSuggestionsDiv.classList.remove('hidden');
+        activeSuggestion = 0;
+      } else {
+        emailSuggestionsDiv.classList.add('hidden');
+      }
+    });
+
+    // Keyboard navigation for suggestions
+    emailField.addEventListener('keydown', function(e) {
+      const suggestions = emailSuggestionsDiv.querySelectorAll('.suggestion-item');
+      if (emailSuggestionsDiv.classList.contains('hidden') || suggestions.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (activeSuggestion < suggestions.length - 1) activeSuggestion++;
+        else activeSuggestion = 0;
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (activeSuggestion > 0) activeSuggestion--;
+        else activeSuggestion = suggestions.length - 1;
+      } else if (e.key === "Enter") {
+        if (activeSuggestion >= 0 && suggestions[activeSuggestion]) {
+          e.preventDefault();
+          suggestions[activeSuggestion].dispatchEvent(new Event('mousedown'));
+        }
+      } else if (e.key === "Escape") {
+        emailSuggestionsDiv.classList.add('hidden');
+      }
+      // Highlight suggestion
+      suggestions.forEach((item, idx) =>
+        item.classList.toggle('active', idx === activeSuggestion)
+      );
+    });
+
+    // Hide suggestion box when unfocused
+    document.addEventListener('click', function(e) {
+      if (!emailSuggestionsDiv.contains(e.target) && e.target !== emailField)
+        emailSuggestionsDiv.classList.add('hidden');
+    });
+
+  </script>
+</body>
+</html>
