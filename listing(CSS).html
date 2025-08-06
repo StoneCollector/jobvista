@@ -18,7 +18,7 @@
       position: relative;
     }
 
-    /* Bookmark floating button */
+    
     .bookmark-btn-float {
       position: absolute;
       top: 20px;
@@ -68,7 +68,7 @@
     }
     .bookmark-btn-float:focus .star { stroke: #fbbf24; }
 
-    /* Containers and layout */
+
     .flex { display: flex; }
     .flex-col { flex-direction: column; }
     .flex-row { flex-direction: row; }
@@ -114,12 +114,11 @@
     .text-xs {font-size: 0.80rem;}
     .font-semibold { font-weight: 600;}
 
-    /* Breadcrumb */
+
     nav ol { padding: 0; display: inline-flex; list-style: none; gap: 0.4em;}
     nav a { color: #2563eb; text-decoration: none;}
     nav a:hover {text-decoration: underline;}
-    
-    /* Badges & Chips */
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -131,7 +130,7 @@
       color: #15803d;
       margin-left: 8px;
     }
-    /* Timeline & Info */
+
     .info-group {
       display: flex;
       flex-wrap: wrap;
@@ -145,7 +144,7 @@
       width: 18px; height: 18px; margin-right: 4px; color: #aaa; vertical-align: middle;
       display: inline;
     }
-    /* Salary Highlight */
+
     .salary {
       background: linear-gradient(92deg,#e0e7ff 20%,#f0f5ff 100%);
       color: #1554b7;
@@ -165,14 +164,14 @@
       0% { box-shadow: 0 0px 16px 0 #9adaff22;}
       100% { box-shadow: 0 0px 40px 5px #a8daff42;}
     }
-    /* Main & Sidebar layout responsive */
+ 
     @media (max-width: 800px) {
       .flex-row {flex-direction: column;}
       .aside { width: 100% !important;}
       .bookmark-btn-float { right: 10px; top: 12px;}
     }
     
-    /* ----- Apply Now Button ---- */
+ 
 .apply-btn {
   width: 100%;
   display: block;
@@ -182,7 +181,7 @@
   color: #fff;
   background: linear-gradient(270deg, #6366f1, #0ea5e9, #22d3ee, #7c3aed, #f472b6, #6366f1);
   background-size: 140% 140%;
-  background-position: 0% 50%; /* starting position */
+  background-position: 0% 50%;
   border: none;
   border-radius: 1.6em;
   cursor: pointer;
@@ -202,7 +201,7 @@
   transform: scale(0.98);
 }
 
-/* Ripple effect remains unchanged */
+
 .apply-btn .ripple {
   position: absolute;
   border-radius: 100%;
@@ -218,14 +217,14 @@
 
 
 
-    /* "About" logo placeholder */
+ 
     .logo {
       background: linear-gradient(135deg,#4f8cff,#dbeafe 85%);
       width: 33px; height: 44px; border-radius: 7px;
       display: inline-block; margin-right: 0.7em;
       border: 1.5px solid #b1dbff;
     }
-    /* Company website link */
+
     .about-link {
       color: #2563eb; text-decoration: none; font-size: 0.90rem;
       transition: color .17s;
@@ -235,13 +234,13 @@
 </head>
 <body>
   <div class="container">
-    <!-- Floating Bookmark Button -->
+   
     <button class="bookmark-btn-float" id="bookmarkBtn" aria-label="Bookmark this job" type="button">
       <svg class="star" viewBox="0 0 24 24">
         <polygon points="12 18.2 6.07 21.3 7.28 14.21 2 9.26 9.05 8.63 12 2 14.95 8.63 22 9.26 16.72 14.21 17.93 21.3 12 18.2"/>
       </svg>
     </button>
-    <!-- Breadcrumb -->
+ 
     <nav class="text-sm text-gray-400 mb-5">
       <ol>
         <li><a href="hm.html">Jobs</a></li>
@@ -253,7 +252,7 @@
     </nav>
 
     <div class="flex flex-row gap-8">
-      <!-- Main job details -->
+   
       <div class="flex-1 bg-white shadow rounded-lg p-8">
         <div style="display:flex; align-items:baseline; gap:0.5em">
           <h1 class="text-2xl font-bold mb-1" style="flex:0; margin:0 0.3em 0 0;">Software Engineer</h1>
@@ -273,7 +272,7 @@
           <span class="text-red-600 font-semibold">Apply by Jun 30, 2025</span>
         </div>
 
-        <!-- Job Sections -->
+  
         <div>
           <h2 class="font-bold text-lg mt-8 mb-2">Job Description</h2>
           <p class="text-gray-700 mb-4">Null Value found... jk</p>
@@ -287,15 +286,15 @@
           <p class="text-gray-700">TBD</p>
         </div>
       </div>
-      <!-- Sidebar -->
+    
       <aside class="aside w-full" style="width:320px; max-width:100%">
-        <!-- Apply card -->
+      
         <div class="bg-white rounded shadow p-6 mb-5" style="margin-bottom:28px;">
           <button class="apply-btn" id="applyBtn" type="button">
             <span>Apply Now</span>
           </button>
         </div>
-        <!-- About Google -->
+     
         <div class="bg-white rounded shadow p-6">
           <div class="flex items-center mb-2">
             <span class="logo"></span>
@@ -310,9 +309,9 @@
     </div>
   </div>
   <script>
-    // Bookmark button animation toggle
+  
     const btn = document.getElementById('bookmarkBtn');
-    // Animate gradient to follow cursor horizontally on Apply button
+  
     const applyBtn = document.getElementById('applyBtn');
     btn.addEventListener('click', function() {
       btn.classList.toggle('active');
@@ -331,23 +330,23 @@
       applyBtn.appendChild(ripple);
       setTimeout(() => ripple.remove(), 630);
 
-      // You can add navigation, modal, or form submit code here for the real Apply handler!
+    
       alert("Thank you for your interest! (Demo)");
     });
 
 
 applyBtn.addEventListener('mousemove', (e) => {
   const rect = applyBtn.getBoundingClientRect();
-  const x = e.clientX - rect.left; // X position within button
+  const x = e.clientX - rect.left; 
   const width = rect.width;
   const percentX = (x / width) * 100;
-  // Clamp percentage between 0 and 100 for safety
+  
   const clamped = Math.min(Math.max(percentX, 0), 100);
-  // Set background-position X to clamped percent and fixed Y to 50%
+  
   applyBtn.style.backgroundPosition = `${clamped}% 50%`;
 });
 
-// Optional: reset background position when mouse leaves
+
 applyBtn.addEventListener('mouseleave', () => {
   applyBtn.style.backgroundPosition = `0% 50%`;
 });
@@ -355,3 +354,4 @@ applyBtn.addEventListener('mouseleave', () => {
   </script>
 </body>
 </html>
+
