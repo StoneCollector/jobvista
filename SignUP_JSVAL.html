@@ -6,7 +6,7 @@
   <title>Sign Up</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Styles for email suggestion dropdown */
+    
     .suggestion-list {
       border: 1px solid #d1d5db;
       background: white;
@@ -44,7 +44,7 @@
         <input id="email" type="email" placeholder="Email address"
           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
           autocomplete="off" />
-        <!-- Email autocomplete suggestion will show here -->
+        
         <div id="emailSuggestions" class="suggestion-list hidden"></div>
         <p class="text-xs text-gray-500 mt-1">
           Required. Please enter a valid email address.
@@ -92,7 +92,7 @@
     </form>
   </div>
   <script>
-    // PASSWORD & FORM VALIDATION CODE
+    
     const form = document.getElementById('signupForm');
     const usernameField = document.getElementById('username');
     const emailField = document.getElementById('email');
@@ -110,7 +110,7 @@
       "password", "12345678", "123456789", "qwerty", "abc123", "11111111", "password1", "123456", "1234567"
     ];
 
-    // Helper functions for validation
+    
     function validateUsername(username) {
       if (!username) return "Username is required.";
       if (username.length > 25) return "Username must be at most 25 characters.";
@@ -150,7 +150,7 @@
       for (let c of commonPasswords) {
         if (password.toLowerCase() === c) return "Password is too common.";
       }
-      // Too similar to username or email: check for substrings of at least 3 chars
+      
       const lowerPwd = password.toLowerCase();
       if (username && username.length >= 3 && lowerPwd.includes(username.toLowerCase())) {
         return "Password is too similar to your username.";
@@ -172,28 +172,28 @@
 
     form.addEventListener('submit', function(e) {
       let valid = true;
-      // Clear errors
+      
       usernameError.textContent = "";
       emailError.textContent = "";
       dobError.textContent = "";
       passwordError.textContent = "";
       password2Error.textContent = "";
 
-      // Username validation
+      
       const usernameMsg = validateUsername(usernameField.value.trim());
       if (usernameMsg) {
         usernameError.textContent = usernameMsg;
         valid = false;
       }
 
-      // Email validation
+      
       const emailMsg = validateEmail(emailField.value.trim());
       if (emailMsg) {
         emailError.textContent = emailMsg;
         valid = false;
       }
 
-      // DOB validation
+      
       const dobMsg = validateDOB(dobField.value.trim());
       if (dobMsg) {
         dobError.textContent = dobMsg;
@@ -211,7 +211,7 @@
         valid = false;
       }
 
-      // Password confirmation
+      
       const password2Msg = validatePassword2(passwordField.value, password2Field.value);
       if (password2Msg) {
         password2Error.textContent = password2Msg;
@@ -225,12 +225,12 @@
     });
 
 
-    ////////// EMAIL DOMAIN AUTOCOMPLETE //////////
+    
     const emailSuggestionsDiv = document.getElementById('emailSuggestions');
     const emailDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
     let activeSuggestion = -1;
 
-    // Helper: get local part and current domain, if any
+    
     function splitEmail(input) {
       const idx = input.indexOf('@');
       if (idx === -1) return {local: input, domain: ''};
@@ -248,9 +248,9 @@
         return;
       }
       const {local, domain} = splitEmail(value);
-      // If already a domain is entered, filter suggestions
+      
       const filtered = emailDomains.filter(d => d.startsWith(domain));
-      // Show only if there are matches and an '@'
+      
       if (filtered.length > 0 && value.endsWith('@') || (domain && filtered.length > 0)) {
         emailSuggestionsDiv.innerHTML = '';
         filtered.forEach((d, idx) => {
@@ -259,7 +259,7 @@
           div.textContent = local + '@' + d;
           div.tabIndex = 0;
           div.addEventListener('mousedown', function(ev) {
-            ev.preventDefault(); // Prevents input blur
+            ev.preventDefault(); 
             emailField.value = local + '@' + d;
             emailSuggestionsDiv.classList.add('hidden');
             emailField.focus();
@@ -273,7 +273,7 @@
       }
     });
 
-    // Keyboard navigation for suggestions
+    
     emailField.addEventListener('keydown', function(e) {
       const suggestions = emailSuggestionsDiv.querySelectorAll('.suggestion-item');
       if (emailSuggestionsDiv.classList.contains('hidden') || suggestions.length === 0) return;
@@ -293,13 +293,13 @@
       } else if (e.key === "Escape") {
         emailSuggestionsDiv.classList.add('hidden');
       }
-      // Highlight suggestion
+      
       suggestions.forEach((item, idx) =>
         item.classList.toggle('active', idx === activeSuggestion)
       );
     });
 
-    // Hide suggestion box when unfocused
+    
     document.addEventListener('click', function(e) {
       if (!emailSuggestionsDiv.contains(e.target) && e.target !== emailField)
         emailSuggestionsDiv.classList.add('hidden');
@@ -308,3 +308,4 @@
   </script>
 </body>
 </html>
+
