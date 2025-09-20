@@ -27,6 +27,7 @@ class Company(models.Model):
     class Meta:
         verbose_name_plural = "Companies"
 
+
 class JobCategory(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
@@ -36,6 +37,7 @@ class JobCategory(models.Model):
 
     class Meta:
         verbose_name_plural = "Job Categories"
+
 
 class Job(models.Model):
     EMPLOYMENT_TYPES = [
@@ -84,6 +86,7 @@ class Job(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
 
 class ApplyForJob(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applied')

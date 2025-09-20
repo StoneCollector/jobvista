@@ -38,14 +38,13 @@ def login_view(request):
 
         if not User.objects.filter(username=username).exists():
             messages.error(request, 'Username does not exist')
-            return redirect('/accounts/login')
+            return redirect('login')
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            temp = CustomUser.objects.get(user=user)
-            print(temp.role)
-            if temp.role == 'applicant':
+            temp = CustomUser.objects.get(user=user) if CustomUser.objects.filter(user=user).exists() else None
+            if not temp or temp.role == 'applicant':
                 return redirect('home')
             elif temp.role == 'company':
                 return redirect('company_view')
@@ -54,9 +53,11 @@ def login_view(request):
 
     return render(request, 'accounts/login.html')
 
+
 def logout_view(request):
     logout(request)
     return redirect('home')
+
 
 @login_required
 def profile_edit(request):
@@ -104,6 +105,7 @@ def profile_view(request):
         'skills_list': skills_list
     }
     return render(request, 'accounts/profile_view.html', context)
+
 
 def company_view(request):
     return render(request, 'Company/post_job.html')

@@ -20,6 +20,7 @@ def user_bookmarks(request):
     }
     return render(request, 'jobs/user_bookmarks.html', context)
 
+
 @login_required
 def toggle_bookmark(request, job_id):
     job = Job.objects.get(id=job_id, is_active=True)
