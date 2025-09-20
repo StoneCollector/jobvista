@@ -21,7 +21,7 @@ def signup(request):
         role = request.POST.get('role')
 
         if not User.objects.filter(username=username).exists() and not User.objects.filter(email=email).exists():
-            user = User.objects.create(username=username, password=password, email=email)
+            user = User.objects.create_user(username=username, password=password, email=email)
             CustomUser.objects.create(user=user, role=role)
             UserProfile.objects.create(user=user, dateofbirth=dateofbirth)
             return redirect('login')
