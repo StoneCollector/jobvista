@@ -1,152 +1,234 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Company Dashboard - Post Jobs</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Company Dashboard - Post Jobs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="bg-gray-50">
 
-  <div class="flex min-h-screen">
-    <!-- Sidebar -->
+<div class="flex min-h-screen">
     <aside class="w-20 bg-blue-700 flex flex-col justify-between items-center py-8">
-      <div>
-        <div class="mb-8">
-          <span class="text-white text-2xl font-bold">📦</span>
+        <div>
+            <div class="mb-8">
+                <span class="text-white text-2xl font-bold">📦</span>
+            </div>
+            <nav class="flex flex-col items-center space-y-8">
+                <button class="text-blue-200 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path d="M3 12l2-2m0 0l7-7l7 7M13 5v6h6m6 6v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                </button>
+                <button class="text-blue-200 hover:text-white bg-blue-900 p-2 rounded">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path d="M12 4v16m8-8H4"/>
+                    </svg>
+                </button>
+                <button class="text-blue-200 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path d="M5 13l4 4L19 7"/>
+                    </svg>
+                </button>
+                <button class="text-blue-200 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path d="M16 7a4 4 0 01-8 0m8 4v7.5A2.5 2.5 0 0113.5 21h-3A2.5 2.5 0 018 18.5V13"/>
+                    </svg>
+                </button>
+            </nav>
         </div>
-        <nav class="flex flex-col items-center space-y-8">
-          <button class="text-blue-200 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7l7 7M13 5v6h6m6 6v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
-          <button class="text-blue-200 hover:text-white bg-blue-900 p-2 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 4v16m8-8H4"/></svg></button>
-          <button class="text-blue-200 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7"/></svg></button>
-          <button class="text-blue-200 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 7a4 4 0 01-8 0m8 4v7.5A2.5 2.5 0 0113.5 21h-3A2.5 2.5 0 018 18.5V13"/></svg></button>
-        </nav>
-      </div>
-      <button class="bg-blue-900 p-2 rounded-full text-white mt-6"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg></button>
+        <button class="bg-blue-900 p-2 rounded-full text-white mt-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor">
+                <path d="M17 16l4-4m0 0l-4-4m4 4H7"/>
+            </svg>
+        </button>
     </aside>
 
-    <!-- Main content -->
     <div class="flex-1 flex flex-col">
-      <!-- Top bar -->
-      <header class="flex items-center bg-white px-6 py-4 shadow">
-        <div class="flex-1">
-          <h1 class="text-2xl font-bold text-blue-700">Company Job Dashboard</h1>
-        </div>
-        <div class="flex items-center space-x-4">
-          <button class="bg-blue-100 h-10 w-10 rounded-full grid place-content-center text-blue-700 font-bold text-lg">C</button>
-          <span class="font-semibold">MyCompany</span>
-          <button class="bg-gray-100 rounded-full p-2 hover:bg-gray-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15 17h5l-1.405-1.405M19 19l-1.405-1.405M13 19h6a2 2 0 002-2v-6a2 2 0 00-2-2h-1m-4 2v-1a4 4 0 10-8 0v1m4-7v6" /></svg>
-          </button>
-        </div>
-      </header>
+        <header class="flex items-center bg-white px-6 py-4 shadow">
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold text-blue-700">Company Job Dashboard</h1>
+            </div>
+            <div class="flex items-center space-x-4">
 
-      <main class="flex-1 overflow-y-auto p-8">
-        <!-- Dashboard stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div class="bg-white rounded shadow p-6 flex items-center space-x-4">
-            <div class="bg-blue-100 p-2 rounded-full"><svg class="h-7 w-7 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8c2.21 0 4-1.79 4-4"/><path d="M12 8c-2.21 0-4-1.79-4-4"/><path d="M12 8V4"/></svg></div>
-            <div>
-              <div class="text-gray-600 text-sm">Active Jobs</div>
-              <div class="font-bold text-xl">3</div>
-            </div>
-          </div>
-          <div class="bg-white rounded shadow p-6 flex items-center space-x-4">
-            <div class="bg-yellow-100 p-2 rounded-full"><svg class="h-7 w-7 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 13v-2a7 7 0 10-14 0v2"/><path d="M5 13c0 1.657 6 3 6 3s6-1.343 6-3"/></svg></div>
-            <div>
-              <div class="text-gray-600 text-sm">Closed Jobs</div>
-              <div class="font-bold text-xl">1</div>
-            </div>
-          </div>
-          <div class="bg-white rounded shadow p-6 flex items-center space-x-4">
-            <div class="bg-green-100 p-2 rounded-full"><svg class="h-7 w-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17 20h5v2H2v-2h5"/><path d="M17 8v6a5 5 0 01-10 0V8"/><path d="M12 9v8"/></svg></div>
-            <div>
-              <div class="text-gray-600 text-sm">Applicants</div>
-              <div class="font-bold text-xl">42</div>
-            </div>
-          </div>
-        </div>
+                <div class="relative">
+                    <button id="user-menu-button"
+                            class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300 flex items-center">
+                        <i class="fas fa-user mr-1"></i>{{ user.username }}
+                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                    </button>
 
-        <!-- Job posting form -->
-        <section class="bg-white rounded shadow p-8 max-w-2xl mb-10">
-          <h2 class="font-bold text-xl mb-4 text-blue-700">Post a New Job</h2>
-          <form class="space-y-5">
-            <div>
-              <label for="title" class="block text-sm font-medium mb-1">Job Title</label>
-              <input id="title" class="w-full border rounded px-3 py-2" placeholder="e.g. Software Engineer" />
+                    <div id="user-menu"
+                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                        <a href="{% url 'profile_view' %}"
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                        <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                    </div>
+                </div>
+                <span class="font-semibold">{{ company }}</span>
+                <button class="bg-blue-100 h-10 w-10 rounded-full grid place-content-center text-blue-700 font-bold text-lg">
+                    <img src="{{ company.logo.url }}" alt="{{ company.name }}"
+                         class="w-16 h-16 object-contain mb-4">
+                </button>
             </div>
-            <div>
-              <label for="location" class="block text-sm font-medium mb-1">Location</label>
-              <input id="location" class="w-full border rounded px-3 py-2" placeholder="e.g. Mumbai" />
-            </div>
-            <div>
-              <label for="type" class="block text-sm font-medium mb-1">Employment Type</label>
-              <select id="type" class="w-full border rounded px-3 py-2">
-                <option>Full Time</option>
-                <option>Part Time</option>
-                <option>Internship</option>
-                <option>Contract</option>
-              </select>
-            </div>
-            <div>
-              <label for="desc" class="block text-sm font-medium mb-1">Description</label>
-              <textarea id="desc" class="w-full border rounded px-3 py-2" rows="4" placeholder="Describe the job, responsibilities and requirements..."></textarea>
-            </div>
-            <div>
-              <label for="tags" class="block text-sm font-medium mb-1">Tags (comma separated)</label>
-              <input id="tags" class="w-full border rounded px-3 py-2" placeholder="e.g. Remote, React, Mid Level" />
-            </div>
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700 transition">Post Job</button>
-          </form>
-        </section>
+        </header>
 
-        <!-- Managed jobs table -->
-        <section>
-          <h2 class="font-bold text-xl mb-4 text-blue-700">Your Active Jobs</h2>
-          <div class="rounded shadow overflow-x-auto bg-white">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-blue-100">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Title</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase">Type</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase">Location</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase">Applicants</th>
-                  <th class="px-6 py-3 text-xs font-medium text-blue-700 uppercase">Status</th>
-                  <th class="px-6 py-3 text-xs font-medium text-blue-700 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-100">
-                <tr>
-                  <td class="px-6 py-4">Software Engineer</td>
-                  <td class="px-6 py-4">Full Time</td>
-                  <td class="px-6 py-4">Bengaluru</td>
-                  <td class="px-6 py-4">18</td>
-                  <td class="px-6 py-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">Active</span></td>
-                  <td class="px-6 py-4 space-x-2">
-                    <button class="text-blue-600 hover:underline text-sm">View</button>
-                    <button class="text-yellow-600 hover:underline text-sm">Edit</button>
-                    <button class="text-red-600 hover:underline text-sm">Close</button>
-                  </td>
-                </tr>
-                <tr class="bg-gray-50">
-                  <td class="px-6 py-4">Accountant</td>
-                  <td class="px-6 py-4">Part Time</td>
-                  <td class="px-6 py-4">Remote</td>
-                  <td class="px-6 py-4">6</td>
-                  <td class="px-6 py-4"><span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs">Pending</span></td>
-                  <td class="px-6 py-4 space-x-2">
-                    <button class="text-blue-600 hover:underline text-sm">View</button>
-                    <button class="text-yellow-600 hover:underline text-sm">Edit</button>
-                    <button class="text-red-600 hover:underline text-sm">Close</button>
-                  </td>
-                </tr>
-                <!-- Add more job rows as needed -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </main>
+        <main class="flex-1 overflow-y-auto p-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white rounded shadow p-6 flex items-center space-x-4">
+                    <div class="bg-blue-100 p-2 rounded-full">
+                        <svg class="h-7 w-7 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M12 8c2.21 0 4-1.79 4-4"/>
+                            <path d="M12 8c-2.21 0-4-1.79-4-4"/>
+                            <path d="M12 8V4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="text-gray-600 text-sm">Active Jobs</div>
+                        <div class="font-bold text-xl">3</div>
+                    </div>
+                </div>
+                <div class="bg-white rounded shadow p-6 flex items-center space-x-4">
+                    <div class="bg-yellow-100 p-2 rounded-full">
+                        <svg class="h-7 w-7 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M19 13v-2a7 7 0 10-14 0v2"/>
+                            <path d="M5 13c0 1.657 6 3 6 3s6-1.343 6-3"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="text-gray-600 text-sm">Closed Jobs</div>
+                        <div class="font-bold text-xl">1</div>
+                    </div>
+                </div>
+                <div class="bg-white rounded shadow p-6 flex items-center space-x-4">
+                    <div class="bg-green-100 p-2 rounded-full">
+                        <svg class="h-7 w-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M17 20h5v2H2v-2h5"/>
+                            <path d="M17 8v6a5 5 0 01-10 0V8"/>
+                            <path d="M12 9v8"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="text-gray-600 text-sm">Applicants</div>
+                        <div class="font-bold text-xl">42</div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="bg-white rounded shadow p-8 max-w-2xl mb-10">
+                <h2 class="font-bold text-xl mb-4 text-blue-700">Post a New Job</h2>
+                <form class="space-y-5">
+                    <div>
+                        <label for="title" class="block text-sm font-medium mb-1">Job Title</label>
+                        <input id="title" class="w-full border rounded px-3 py-2" placeholder="e.g. Software Engineer"/>
+                    </div>
+                    <div>
+                        <label for="location" class="block text-sm font-medium mb-1">Location</label>
+                        <input id="location" class="w-full border rounded px-3 py-2" placeholder="e.g. Mumbai"/>
+                    </div>
+                    <div>
+                        <label for="type" class="block text-sm font-medium mb-1">Employment Type</label>
+                        <select id="type" class="w-full border rounded px-3 py-2">
+                            <option>Full Time</option>
+                            <option>Part Time</option>
+                            <option>Internship</option>
+                            <option>Contract</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="desc" class="block text-sm font-medium mb-1">Description</label>
+                        <textarea id="desc" class="w-full border rounded px-3 py-2" rows="4"
+                                  placeholder="Describe the job, responsibilities and requirements..."></textarea>
+                    </div>
+                    <div>
+                        <label for="tags" class="block text-sm font-medium mb-1">Tags (comma separated)</label>
+                        <input id="tags" class="w-full border rounded px-3 py-2"
+                               placeholder="e.g. Remote, React, Mid Level"/>
+                    </div>
+                    <button type="submit"
+                            class="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700 transition">
+                        Post Job
+                    </button>
+                </form>
+            </section>
+
+            <section>
+                <h2 class="font-bold text-xl mb-4 text-blue-700">Your Active Jobs</h2>
+                <div class="rounded shadow overflow-x-auto bg-white">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-blue-100">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
+                                Title
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase">Applicants</th>
+                            <th class="px-6 py-3 text-xs font-medium text-blue-700 uppercase">Status</th>
+                            <th class="px-6 py-3 text-xs font-medium text-blue-700 uppercase">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100">
+                        <tr>
+                            <td class="px-6 py-4">Software Engineer</td>
+                            <td class="px-6 py-4">Full Time</td>
+                            <td class="px-6 py-4">Bengaluru</td>
+                            <td class="px-6 py-4">18</td>
+                            <td class="px-6 py-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">Active</span>
+                            </td>
+                            <td class="px-6 py-4 space-x-2">
+                                <button class="text-blue-600 hover:underline text-sm">View</button>
+                                <button class="text-yellow-600 hover:underline text-sm">Edit</button>
+                                <button class="text-red-600 hover:underline text-sm">Close</button>
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td class="px-6 py-4">Accountant</td>
+                            <td class="px-6 py-4">Part Time</td>
+                            <td class="px-6 py-4">Remote</td>
+                            <td class="px-6 py-4">6</td>
+                            <td class="px-6 py-4"><span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs">Pending</span>
+                            </td>
+                            <td class="px-6 py-4 space-x-2">
+                                <button class="text-blue-600 hover:underline text-sm">View</button>
+                                <button class="text-yellow-600 hover:underline text-sm">Edit</button>
+                                <button class="text-red-600 hover:underline text-sm">Close</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
     </div>
-  </div>
+</div>
+
+<script>
+    // Get the button and the menu by their IDs
+    const userMenuButton = document.getElementById('user-menu-button');
+    const userMenu = document.getElementById('user-menu');
+
+    // Add an event listener to the button
+    userMenuButton.addEventListener('click', () => {
+        // Toggle the 'hidden' class on the menu when the button is clicked
+        userMenu.classList.toggle('hidden');
+    });
+
+    // Add an event listener to the whole page to handle "click away"
+    document.addEventListener('click', (event) => {
+        // Check if the click was outside of the button AND outside of the menu
+        if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
+            // If so, add the 'hidden' class to close the menu
+            userMenu.classList.add('hidden');
+        }
+    });
+</script>
+
 </body>
 </html>

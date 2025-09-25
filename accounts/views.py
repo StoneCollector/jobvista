@@ -46,8 +46,10 @@ def login_view(request):
             temp = CustomUser.objects.get(user=user) if CustomUser.objects.filter(user=user).exists() else None
             if not temp or temp.role == 'applicant':
                 return redirect('home')
-            elif temp.role == 'company':
-                return redirect('company_view')
+            if temp.role == 'company':
+                if not temp.company:
+                    return redirect("profile_completion")
+                return redirect("company_view")
         else:
             messages.error(request, 'Invalid username or password')
 
@@ -108,4 +110,8 @@ def profile_view(request):
 
 
 def company_view(request):
-    return render(request, 'Company/post_job.html')
+    context = {
+        'company': request.user.customuser.company,
+        'logo': request.user.customuser.company.logo
+    }
+    return render(request, 'Company/post_job.html', context)

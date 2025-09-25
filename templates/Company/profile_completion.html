@@ -1,0 +1,21 @@
+<h2>Complete Your Profile</h2>
+<p>Please select one of the options below:</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <!-- Option 1: Add new company -->
+    <button type="submit" name="action" value="new_company">Add a New Company</button>
+
+    <hr>
+
+    <!-- Option 2: Choose existing company -->
+    <label for="company">Select an existing company:</label>
+    <select name="company_id" id="company">
+        <option value="">-- Select Company --</option>
+        {% for company in companies %}
+            <option value="{{ company.id }}">{{ company.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" name="action" value="existing_company">Join Selected Company</button>
+</form>

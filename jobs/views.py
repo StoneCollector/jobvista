@@ -7,6 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth import logout
 
 
 # Create your views here.
@@ -119,7 +120,7 @@ def create_company(request):
                 "Your company has been submitted for approval. "
                 "Please wait for admin approval before posting jobs."
             )
-            return redirect("dashboard")  # adjust to your dashboard/homepage
+            return redirect('company_view')  # adjust to your dashboard/homepage
 
     return render(request, "Company/update_company.html")
 
@@ -146,3 +147,36 @@ def update_company(request, pk):
         return redirect("company_view")
 
     return render(request, "Company/create_company.html", {"company": company})
+
+
+@login_required
+def profile_completion(request):
+    custom_user = request.user.customuser
+
+    # If the user already has a company, skip profile completion
+    if custom_user.company:
+        return redirect("dashboard")
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "new_company":
+            return redirect("create_company")
+
+        elif action == "existing_company":
+            company_id = request.POST.get("company_id")
+            if company_id:
+                company = get_object_or_404(Company, pk=company_id, status="approved")
+                custom_user.company = company
+                custom_user.save()
+                messages.success(request, "Company successfully linked to your profile.")
+                return redirect("company_view")
+            else:
+                messages.error(request, "Please select a company.")
+
+    companies = Company.objects.filter(status="approved")
+    return render(request, "Company/profile_completion.html", {"companies": companies})
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')
