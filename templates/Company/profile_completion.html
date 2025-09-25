@@ -1,21 +1,31 @@
-<h2>Complete Your Profile</h2>
-<p>Please select one of the options below:</p>
+{% extends 'base.html' %}
+{% block title %}Complete Company Profile - JobVista{% endblock %}
+{% block content %}
+<div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
+  <div class="max-w-3xl mx-auto">
+    <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
+      <h2 class="text-xl font-semibold mb-2" style="color: var(--text-heading);">Complete Your Company Setup</h2>
+      <p class="text-gray-600 text-sm mb-4">Choose to submit a new company for approval, or join an existing approved company.</p>
 
-<form method="post">
-    {% csrf_token %}
-
-    <!-- Option 1: Add new company -->
-    <button type="submit" name="action" value="new_company">Add a New Company</button>
-
-    <hr>
-
-    <!-- Option 2: Choose existing company -->
-    <label for="company">Select an existing company:</label>
-    <select name="company_id" id="company">
-        <option value="">-- Select Company --</option>
-        {% for company in companies %}
-            <option value="{{ company.id }}">{{ company.name }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit" name="action" value="existing_company">Join Selected Company</button>
-</form>
+      <form method="post" class="space-y-5">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button type="submit" name="action" value="new_company" class="btn-primary-brand px-5 py-3 rounded-md">Add a New Company</button>
+          <div class="flex items-end gap-2">
+            <div class="flex-1">
+              <label class="block text-sm font-medium mb-1">Select an existing company</label>
+              <select name="company_id" class="input w-full">
+                <option value="">-- Select Company --</option>
+                {% for company in companies %}
+                  <option value="{{ company.id }}">{{ company.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" name="action" value="existing_company" class="btn-secondary-brand px-4 py-3 rounded-md">Join</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

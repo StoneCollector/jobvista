@@ -11,7 +11,7 @@
         </div>
 
         {% if page_obj %}
-            <div class="bg-white rounded-lg shadow-lg">
+            <div class="card card-shadow">
                 <!-- Stats Bar -->
                 <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
                     <div class="flex items-center justify-between">
@@ -27,7 +27,7 @@
                 <!-- Bookmarked Jobs List -->
                 <div class="divide-y divide-gray-200">
                     {% for bookmark in page_obj %}
-                        <div class="p-6 hover:bg-gray-50 transition duration-300">
+                        <div class="p-6 hover:bg-white/80 transition duration-300">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <div class="flex items-start justify-between mb-3">
@@ -174,7 +174,7 @@
 
     <script>
         function toggleBookmark(jobId) {
-            fetch(`/bookmark/${jobId}/`, {
+            fetch(`/bookmarks/bookmark/${jobId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrftoken,

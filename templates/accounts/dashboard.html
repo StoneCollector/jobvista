@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - JobVista{% endblock %}
+
+{% block content %}
+<div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold" style="color: var(--text-heading);">Welcome back, {{ user.first_name|default:user.username }}</h1>
+    <p class="text-sm" style="color: var(--text-body);">You have <a href="{% url 'home' %}" class="font-semibold" style="color: var(--color-primary);">{{ recent_jobs|length }} new high‑match jobs</a> this week.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <aside class="lg:col-span-3 hidden lg:block space-y-6">
+      <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px; width:100%">
+        <div class="flex items-center gap-3">
+          <div class="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-gray-500"><i class="fas fa-user"></i></div>
+          <div>
+            <p class="text-base font-semibold" style="color: var(--text-heading);">{{ user.first_name|default:user.username }}</p>
+            <p class="text-xs text-gray-500">Profile {{ profile_strength }}% complete</p>
+          </div>
+        </div>
+        <a href="{% url 'profile_edit' %}" class="mt-4 inline-block w-full text-center px-3 py-2 rounded-md btn-secondary-brand text-sm">View & Edit Profile</a>
+      </div>
+      <nav class="backdrop-blur bg-white/60 border rounded-2xl p-2 card-shadow" style="border-color: #ffffff33; border-width:1px;">
+        <a href="{% url 'dashboard' %}" class="flex items-center gap-2 px-3 py-2 rounded bg-white/80 font-semibold"><i class="fas fa-home"></i><span class="text-sm">My home</span></a>
+        <a href="{% url 'home' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/80"><i class="fas fa-briefcase"></i><span class="text-sm">Jobs</span></a>
+        <a href="{% url 'user_bookmarks' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/80"><i class="fas fa-bookmark"></i><span class="text-sm">Bookmarks</span></a>
+      </nav>
+    </aside>
+
+    <main class="lg:col-span-9 space-y-6">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
+          <h3 class="text-base font-semibold mb-3" style="color: var(--text-heading);">Activity Snapshot</h3>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="flex items-center gap-2"><i class="fas fa-briefcase text-gray-400"></i><div><p class="text-2xl font-bold">{{ stats.applications }}</p><p class="text-gray-500">Applications</p></div></div>
+            <div class="flex items-center gap-2"><i class="fas fa-eye text-gray-400"></i><div><p class="text-2xl font-bold">{{ stats.viewed_by_recruiter }}</p><p class="text-gray-500">Viewed by Recruiter</p></div></div>
+            <div class="flex items-center gap-2"><i class="fas fa-user text-gray-400"></i><div><p class="text-2xl font-bold">{{ stats.profile_views }}</p><p class="text-gray-500">Profile Views</p></div></div>
+            <div class="flex items-center gap-2"><i class="fas fa-comments text-gray-400"></i><div><p class="text-2xl font-bold">{{ stats.interviews }}</p><p class="text-gray-500">Active Interviews</p></div></div>
+          </div>
+        </div>
+        <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
+          <h3 class="text-base font-semibold mb-3" style="color: var(--text-heading);">Profile Strength</h3>
+          <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden"><div class="h-2.5 rounded-full" style="background-color: var(--color-primary); width: {{ profile_strength }}%"></div></div>
+          <p class="mt-2 text-sm text-gray-600">{{ profile_strength }}% complete</p>
+          <p class="text-xs text-gray-500">{{ next_hint }}</p>
+          <a href="{% url 'profile_edit' %}" class="mt-3 inline-block px-3 py-1.5 rounded-md btn-secondary-brand text-sm">Improve Profile</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-10 gap-6">
+
+        <div class="lg:col-span-6 space-y-6">
+          <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold" style="color: var(--text-heading);">Your AI Job Feed</h2>
+              <a href="{% url 'home' %}" class="text-sm" style="color: var(--color-primary);">See all</a>
+            </div>
+            {% if recent_jobs %}
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              {% for job in recent_jobs %}
+              <div class="group border rounded-xl p-4 bg-white/60 hover:bg-white/80 transition card-shadow" style="border-color: #ffffff33;">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center gap-3">
+                    {% if job.company.logo %}
+                    <img src="{{ job.company.logo.url }}" class="w-10 h-10 rounded object-contain border" style="border-color: var(--border);" alt="{{ job.company.name }}"/>
+                    {% else %}
+                    <div class="w-10 h-10 rounded border flex items-center justify-center text-gray-400" style="border-color: var(--border);"><i class="fas fa-building"></i></div>
+                    {% endif %}
+                    <div>
+                      <p class="text-sm font-semibold group-hover:text-blue-600" style="color: var(--text-heading);">{{ job.title }}</p>
+                      <p class="text-xs text-gray-500">{{ job.company.name }} • {{ job.location }}</p>
+                    </div>
+                  </div>
+                  {% if job.match_score %}
+                  <span class="px-2 py-0.5 rounded text-xs whitespace-nowrap" style="background:#EFF2FF; color: var(--color-primary);">✨ {{ job.match_score }}% Match</span>
+                  {% endif %}
+                </div>
+                <div class="mt-3 flex items-center gap-2 text-xs">
+                  {% if job.salary_min or job.salary_max %}
+                  <span class="px-2 py-0.5 bg-green-50 border rounded text-green-600" style="border-color: #CFF7E6;">₹{% if job.salary_min %}{{ job.salary_min|floatformat:0 }}{% endif %}{% if job.salary_max %}–{{ job.salary_max|floatformat:0 }}{% endif %}</span>
+                  {% endif %}
+                  {% for s in job.top_skills %}
+                  <span class="px-2 py-0.5 bg-gray-50 border rounded" style="border-color: var(--border);">{{ s }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+              <p class="text-sm text-gray-600">No recommendations yet. Start by searching and bookmarking jobs.</p>
+            {% endif %}
+          </div>
+          <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
+            <h3 class="text-base font-semibold mb-2" style="color: var(--text-heading);">Skills Hub</h3>
+            {% if suggested_skill %}
+              <p class="text-sm text-gray-700">Top jobs you're viewing require <span class="font-semibold">{{ suggested_skill }}</span>. Consider adding it to your skillset.</p>
+            {% else %}
+              <p class="text-sm text-gray-600">We’ll suggest in-demand skills as you interact with jobs.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+          <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-base font-semibold" style="color: var(--text-heading);">Application Tracker</h3>
+            </div>
+            <div class="border-b" style="border-color: var(--border);">
+              <nav class="-mb-px flex space-x-4 text-sm" aria-label="Tabs">
+                <a href="#" class="tab-button active-tab" data-target="tab-active">Active ({{ saved|length }})</a>
+                <a href="#" class="tab-button" data-target="tab-interviewing">Interviewing (0)</a>
+                <a href="#" class="tab-button" data-target="tab-archived">Archived (0)</a>
+              </nav>
+            </div>
+            <div id="tab-active" class="tab-content">
+              {% if saved %}
+              <ul class="divide-y" style="border-color: var(--border);">
+                {% for b in saved|slice:':6' %}
+                <li class="py-3 status-row group">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <a href="{{ b.job.get_absolute_url }}" class="text-sm font-medium" style="color: var(--text-heading);">{{ b.job.title }}</a>
+                      <p class="text-xs text-gray-500">{{ b.job.company.name }}</p>
+                    </div>
+                    <div class="hidden group-hover:flex items-center gap-2">
+                        <select class="text-xs px-2 py-1 border rounded status-select" style="border-color: var(--border);">
+                          <option>Saved</option><option>Applied</option><option>Interviewing</option><option>Offer</option><option>Rejected</option>
+                        </select>
+                        <button class="text-gray-400 hover:text-red-500" title="Remove"><i class="fas fa-trash"></i></button>
+                    </div>
+                  </div>
+                </li>
+                {% endfor %}
+              </ul>
+              {% else %}
+                <p class="text-sm text-gray-600 py-4">No saved jobs yet.</p>
+              {% endif %}
+            </div>
+            <div id="tab-interviewing" class="tab-content hidden"><p class="text-sm text-gray-600 py-4">No applications in interviewing stage.</p></div>
+            <div id="tab-archived" class="tab-content hidden"><p class="text-sm text-gray-600 py-4">No archived applications.</p></div>
+
+            <a href="#" class="mt-4 inline-block w-full text-center px-3 py-2 rounded-md btn-secondary-brand text-sm">Open Kanban Board</a>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<style>
+  .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.04), 0 2px 4px -2px rgb(0 0 0 / 0.04); }
+  .status-row { border-left: 3px solid transparent; padding-left: 10px; }
+  .status-saved { border-left-color: #9CA3AF; }
+  .status-applied { border-left-color: #A1A1AA; }
+  .status-interviewing { border-left-color: #4A6CFD; }
+  .status-offer { border-left-color: #10B981; }
+  .status-rejected { border-left-color: #EF4444; }
+  .tab-button {
+    color: #6B7280;
+    padding: 8px 4px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+  }
+  .tab-button:hover { color: var(--color-primary); }
+  .tab-button.active-tab {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  // Animate counters
+  document.querySelectorAll('.text-2xl.font-bold').forEach(function(el){
+    const target = parseInt(el.textContent, 10);
+    if (isNaN(target)) return;
+    el.textContent = '0';
+    let current = 0; const step = Math.max(1, Math.round(target/30));
+    const tick = () => { current += step; if (current >= target) { el.textContent = target; } else { el.textContent = current; requestAnimationFrame(tick); } };
+    requestAnimationFrame(tick);
+  });
+
+  // Status color coding
+  function applyStatusColor(row, val){
+    row.classList.remove('status-saved','status-applied','status-interviewing','status-offer','status-rejected');
+    const map = { 'Saved':'status-saved','Applied':'status-applied','Interviewing':'status-interviewing','Offer':'status-offer','Rejected':'status-rejected' };
+    row.classList.add(map[val] || 'status-saved');
+  }
+  document.querySelectorAll('.status-row').forEach(function(row){
+    const select = row.querySelector('.status-select');
+    if (!select) return;
+    applyStatusColor(row, select.value);
+    select.addEventListener('change', function(){ applyStatusColor(row, select.value); });
+  });
+
+  // NEW: Tab functionality for Application Tracker
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      // Update button active state
+      tabButtons.forEach(btn => btn.classList.remove('active-tab'));
+      button.classList.add('active-tab');
+      // Show/hide content
+      const targetId = button.getAttribute('data-target');
+      tabContents.forEach(content => {
+        if (content.id === targetId) {
+          content.classList.remove('hidden');
+        } else {
+          content.classList.add('hidden');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

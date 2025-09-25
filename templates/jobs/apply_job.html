@@ -1,69 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Apply Now - Job X</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-      .profile-pic {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 3px solid #007bff;
-      }
-    </style>
-</head>
-<body class="bg-light">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-lg p-4">
-                    <h2 class="text-center mb-4">Apply Now for <span class="text-primary">Job X</span></h2>
-                    <div class="text-center mb-4">
-                    </div>
-                    <form method="POST" enctype="multipart/form-data" id="applyForm">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="fullName" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="fullName" placeholder="John Doe" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" placeholder="john@example.com" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone" placeholder="1234567890" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="resume" class="form-label">Upload Resume</label>
-                                <input class="form-control" type="file" id="resume" required>
-                            </div>
-                            <div class="col-12">
-                                <label for="coverLetter" class="form-label">Cover Letter</label>
-                                <textarea class="form-control" id="coverLetter" rows="4" style="resize: none;" placeholder="Write your cover letter here"></textarea>
-                            </div>
-                            <div class="col-12 mt-3 text-center">
-                                <button type="submit" class="btn btn-primary px-5">Apply Now</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+{% extends 'base.html' %}
+
+{% block title %}Apply for {{ job.title }} - JobVista{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Apply for {{ job.title }}</h1>
+        <p class="text-gray-600 mb-6">at {{ job.company.name }} • {{ job.location }}</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p class="text-blue-800">
+                    You are about to apply using your account. We will notify the company of your interest.
+                </p>
             </div>
-        </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ job.get_absolute_url }}" class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</a>
+                <button type="submit" class="px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Submit Application</button>
+            </div>
+        </form>
     </div>
-    <!-- Bootstrap JS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      // Optional: Submit handler
-      document.getElementById("applyForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-        alert("Application submitted successfully!");
-        // You can send data using fetch() or XMLHttpRequest here
-      });
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}

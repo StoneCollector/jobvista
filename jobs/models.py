@@ -12,12 +12,21 @@ class Company(models.Model):
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
     ]
+    SIZE_CHOICES = [
+        ('1-10', '1-10 employees'),
+        ('11-50', '11-50 employees'),
+        ('51-200', '51-200 employees'),
+        ('201-500', '201-500 employees'),
+        ('501-1000', '501-1000 employees'),
+        ('1000+', '1000+ employees'),
+    ]
 
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField()
     website = models.URLField(blank=True, null=True)
     logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)
     location = models.CharField(max_length=200)
+    company_size = models.CharField(max_length=20, choices=SIZE_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -89,8 +98,17 @@ class Job(models.Model):
 
 
 class ApplyForJob(models.Model):
+    STATUS_CHOICES = [
+        ('new', 'New Applicant'),
+        ('screening', 'Screening'),
+        ('interviewing', 'Interviewing'),
+        ('offer', 'Offer'),
+        ('hired', 'Hired'),
+        ('rejected', 'Rejected'),
+    ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applied')
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applied')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

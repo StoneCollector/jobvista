@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import *
+from jobs.models import Job
 
 
 # Create your views here.
@@ -23,7 +24,7 @@ def user_bookmarks(request):
 
 @login_required
 def toggle_bookmark(request, job_id):
-    job = Job.objects.get(id=job_id, is_active=True)
+    job = get_object_or_404(Job, id=job_id, is_active=True)
     bookmark, created = JobBookmark.objects.get_or_create(user=request.user, job=job)
 
     if created:
