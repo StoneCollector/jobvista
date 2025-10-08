@@ -209,6 +209,8 @@ def apply_job(request, slug):
 
 
 def create_job(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     custom_user = request.user.customuser
     if custom_user.role != "company" or not custom_user.company or custom_user.company.status != "approved":
         raise PermissionDenied("You are not approved to post jobs yet.")
