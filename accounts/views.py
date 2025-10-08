@@ -5,14 +5,36 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from django.db.models import Q
+from django.db.models import Q, Count
 from collections import Counter
+import os
+import tempfile
+import fitz  # PyMuPDF
+import docx
 
 from .forms import UserProfileForm, SignupForm
 from .models import *
 from .models import UserProfile
 from jobs.models import Job, JobCategory, Company
-from .ml import extract_skills_from_text
+from .ai_analyzer import extract_skills, infer_skills_from_text, resume_quality, check_ats_friendliness
+
+
+def _extract_text_from_file(file_path):
+    """Extract raw text from a PDF or DOCX file."""
+    ext = file_path.rsplit(".", 1)[1].lower()
+    text = ""
+    try:
+        if ext == "pdf":
+            doc = fitz.open(file_path)
+            for page in doc:
+                text += page.get_text("text") + "\n"
+        elif ext == "docx":
+            doc = docx.Document(file_path)
+            text = "\n".join([para.text for para in doc.paragraphs])
+    except Exception as e:
+        print(f"Error extracting text from {file_path}: {e}")
+        return None
+    return text.strip()
 
 
 # Create your views here.
@@ -127,61 +149,72 @@ def career_advice_view(request):
             messages.error(request, 'Please upload a resume file.')
             return redirect('career_advice')
 
+        # Save to a temporary file to read it
+        fd, temp_path = tempfile.mkstemp(suffix=f"_{resume_file.name}")
         try:
-            resume_text = resume_file.read().decode('utf-8', errors='ignore')
-        except Exception:
-            messages.error(request, 'Could not read the uploaded file.')
+            with os.fdopen(fd, 'wb') as tmp:
+                for chunk in resume_file.chunks():
+                    tmp.write(chunk)
+
+            resume_text = _extract_text_from_file(temp_path)
+        finally:
+            os.remove(temp_path)
+
+        if not resume_text:
+            messages.error(request,
+                           'Could not extract text from the uploaded file. Please ensure it is not an image-based PDF or corrupted.')
             return redirect('career_advice')
 
-        extracted_skills = extract_skills_from_text(resume_text)
+        # --- AI Analysis ---
+        explicit_skills = extract_skills(resume_text)
+        inferred_skills = infer_skills_from_text(resume_text)
+        all_skills = sorted(list(set(explicit_skills + inferred_skills)))
 
-        # Generate dynamic advice based on extracted skills
-        advice = {
-            'strengths': [],
-            'improvements': [
-                "Add a brief professional summary at the top to highlight your career goals.",
-                "Use action verbs (e.g., 'Developed,' 'Managed,' 'Implemented') to describe accomplishments.",
-                "Quantify achievements with numbers where possible (e.g., 'Increased efficiency by 15%')."
-            ]
-        }
-        if extracted_skills:
-            advice['strengths'].append(f"Great job highlighting your skills in: {', '.join(extracted_skills[:5])}.")
-        else:
-            advice['strengths'].append(
-                "Your resume was successfully read. For better results, ensure key skills are clearly listed as text.")
+        quality_report = resume_quality(resume_text)
+        ats_report = check_ats_friendliness(resume_text)
 
-        if len(extracted_skills) < 5:
-            advice['improvements'].append(
-                "Consider listing at least 5-7 core technical skills relevant to your target roles.")
-
-        # Find and rank company matches based on skills
+        # --- Company Matching ---
         companies = []
-        if extracted_skills:
-            skill_query = Q()
-            for skill in extracted_skills:
-                skill_query |= Q(description__icontains=skill) | Q(requirements__icontains=skill)
+        if all_skills:
+            # This Q object is for filtering the Company model through its jobs
+            company_skill_query = Q()
+            for skill in all_skills:
+                company_skill_query |= Q(jobs__description__icontains=skill) | Q(jobs__requirements__icontains=skill)
 
-            matching_jobs = Job.objects.filter(skill_query, is_active=True).values('company_id')
+            # This Q object is for filtering Job models directly
+            job_skill_query = Q()
+            for skill in all_skills:
+                job_skill_query |= Q(description__icontains=skill) | Q(requirements__icontains=skill)
 
-            if matching_jobs.exists():
-                company_ids = [job['company_id'] for job in matching_jobs]
-                company_counts = Counter(company_ids)
-                top_company_ids = [cid for cid, count in company_counts.most_common(5)]
+            # Find companies that are approved and have active jobs matching the skills
+            matching_companies = Company.objects.filter(
+                company_skill_query, status="approved", jobs__is_active=True
+            ).distinct()
 
-                # Fetch companies and preserve order by match count
-                company_map = {c.id: c for c in Company.objects.filter(id__in=top_company_ids)}
-                companies = [company_map[cid] for cid in top_company_ids if cid in company_map]
+            # Score companies based on the number of matching jobs
+            company_scores = []
+            for company in matching_companies:
+                # Use the JOB-specific query here
+                job_matches = company.jobs.filter(job_skill_query, is_active=True).count()
+                if job_matches > 0:
+                    company_scores.append((company, job_matches))
+
+            # Sort by score and take top 5
+            company_scores.sort(key=lambda x: x[1], reverse=True)
+            companies = [company for company, score in company_scores[:5]]
 
         # Fallback to popular companies if no matches are found
         if not companies:
-            companies = Company.objects.filter(status="approved").annotate(num_jobs=models.Count('jobs')).order_by(
+            companies = Company.objects.filter(status="approved").annotate(num_jobs=Count('jobs')).order_by(
                 '-num_jobs')[:5]
 
         context = {
-            'advice': advice,
+            'quality_report': quality_report,
+            'ats_report': ats_report,
             'companies': companies,
             'has_results': True,
-            'extracted_skills': extracted_skills
+            'explicit_skills': explicit_skills,
+            'inferred_skills': inferred_skills,
         }
         return render(request, 'accounts/career_advice.html', context)
 

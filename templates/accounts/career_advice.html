@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-5xl mx-auto">
     <div class="text-center mb-8">
         <h1 class="text-4xl font-bold" style="color: var(--text-heading);">Get Instant Resume Feedback</h1>
         <p class="text-lg mt-2" style="color: var(--text-body);">Upload your resume to get AI-powered advice and discover companies that are a great fit for you.</p>
@@ -14,7 +14,7 @@
       <form method="POST" enctype="multipart/form-data" class="space-y-4">
         {% csrf_token %}
         <div>
-          <label for="resume-upload" class="block text-sm font-medium mb-2 text-center">Upload your resume (PDF, DOC, DOCX):</label>
+          <label for="resume-upload" class="block text-sm font-medium mb-2 text-center">Upload your resume (PDF, DOCX):</label>
           <input type="file" name="resume" id="resume-upload" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required />
         </div>
         <div class="text-center pt-4">
@@ -25,33 +25,63 @@
 
     {% if has_results %}
     <div class="mt-10">
-      <h2 class="text-2xl font-bold text-center mb-6" style="color: var(--text-heading);">Your Results</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <h2 class="text-2xl font-bold text-center mb-6" style="color: var(--text-heading);">Your Analysis Results</h2>
+
+      <!-- Skills Overview -->
+      <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow mb-8" style="border-color:#ffffff33;">
+        <h3 class="text-xl font-semibold mb-4" style="color: var(--text-heading);">Skills Overview</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="font-semibold text-gray-800">Explicit Skills Found:</h4>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    {% for skill in explicit_skills %}
+                        <span class="pill">{{ skill }}</span>
+                    {% empty %}
+                        <p class="text-sm text-gray-500">No standard technical skills found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800">Inferred Skills:</h4>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    {% for skill in inferred_skills %}
+                        <span class="pill bg-indigo-50 text-indigo-700 border-indigo-100">{{ skill|title }}</span>
+                    {% empty %}
+                        <p class="text-sm text-gray-500">No soft skills inferred from action verbs.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- AI Advice Section -->
         <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
           <h3 class="text-xl font-semibold mb-4 flex items-center gap-2" style="color: var(--text-heading);"><i class="fas fa-magic text-blue-500"></i> AI-Powered Advice</h3>
-          {% if advice %}
           <div class="space-y-4">
             <div>
-              <h4 class="font-semibold text-green-700">Strengths:</h4>
-              <ul class="list-disc list-inside text-sm text-gray-700 mt-1 space-y-1">
-                {% for item in advice.strengths %}
-                  <li>{{ item }}</li>
+              <h4 class="font-semibold text-green-700">Suggestions for Improvement:</h4>
+              <ul class="list-disc list-inside text-sm text-gray-700 mt-1 space-y-2">
+                {% for item in quality_report.suggestions %}
+                  <li>{{ item.message }} {% if item.context %}<span class="text-xs bg-gray-100 p-1 rounded">e.g., "{{ item.context }}"</span>{% endif %}</li>
+                {% empty %}
+                  <li>Your resume looks clean and uses strong action verbs. Great job!</li>
                 {% endfor %}
               </ul>
             </div>
             <div>
-              <h4 class="font-semibold text-orange-700">Areas for Improvement:</h4>
-              <ul class="list-disc list-inside text-sm text-gray-700 mt-1 space-y-1">
-                {% for item in advice.improvements %}
-                  <li>{{ item }}</li>
+              <h4 class="font-semibold text-purple-700">ATS Friendliness:</h4>
+               <ul class="list-disc list-inside text-sm text-gray-700 mt-1 space-y-2">
+                {% for warning in ats_report.warnings %}
+                    <li>{{ warning }}</li>
                 {% endfor %}
+                {% if ats_report.has_contact_info %}<li><i class="fas fa-check text-green-500 mr-1"></i>Contact info found.</li>{% else %}<li><i class="fas fa-times text-red-500 mr-1"></i>Could not detect email or phone number.</li>{% endif %}
+                {% if ats_report.uses_standard_sections %}<li><i class="fas fa-check text-green-500 mr-1"></i>Uses standard resume sections.</li>{% else %}<li><i class="fas fa-times text-red-500 mr-1"></i>Consider using standard headers like 'Experience', 'Education', 'Skills'.</li>{% endif %}
               </ul>
             </div>
           </div>
-          {% endif %}
         </div>
-        
+
         <!-- Company Matches Section -->
         <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
           <h3 class="text-xl font-semibold mb-4 flex items-center gap-2" style="color: var(--text-heading);"><i class="fas fa-building text-blue-500"></i> Top Company Matches</h3>
@@ -79,7 +109,7 @@
             {% endfor %}
           </div>
           {% else %}
-            <p class="text-sm text-gray-600">No company matches found at this time.</p>
+            <p class="text-sm text-gray-600">No strong company matches found based on your skills. Try broadening your skillset!</p>
           {% endif %}
         </div>
       </div>
