@@ -10,6 +10,13 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import logout
+import os
+from django.conf import settings
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import ApplyForJob, Company, Job, JobCategory
+from django.contrib.auth.decorators import login_required
+from accounts.models import UserProfile
 
 
 # Create your views here.
@@ -486,7 +493,6 @@ def company_applicant_detail(request, application_id: int):
 
     application = get_object_or_404(ApplyForJob.objects.select_related('user', 'job'), pk=application_id, job__company=company)
 
-    # Handle status updates
     if request.method == 'POST':
         new_status = request.POST.get('status')
         valid_statuses = {key for key, _ in ApplyForJob.STATUS_CHOICES}
@@ -498,23 +504,31 @@ def company_applicant_detail(request, application_id: int):
             messages.error(request, 'Invalid status value.')
         return redirect('company_applicant_detail', application_id=application.id)
 
-    # Static AI-like analysis (placeholder): compare job description text to profile skills
     try:
         profile = application.user.userprofile
-        skills = [s.strip() for s in (profile.skills or '').split(',') if s.strip()]
-        # Align with template expectation: expose phone_number alias
-        if not hasattr(profile, 'phone_number'):
-            try:
-                setattr(profile, 'phone_number', getattr(profile, 'phone', ''))
-            except Exception:
-                setattr(profile, 'phone_number', '')
-    except Exception:
+        if profile and profile.resume:
+            # Check if the resume file actually exists
+            resume_path = os.path.join(settings.MEDIA_ROOT, profile.resume.name)
+            if not os.path.exists(resume_path):
+                # If not, try to find it in other user directories
+                file_name = os.path.basename(profile.resume.name)
+                for dirpath, _, filenames in os.walk(settings.MEDIA_ROOT):
+                    if file_name in filenames:
+                        # Found the file, update the path
+                        correct_path = os.path.relpath(os.path.join(dirpath, file_name), settings.MEDIA_ROOT)
+                        profile.resume.name = correct_path
+                        break # Stop searching once found
+    except UserProfile.DoesNotExist:
         profile = None
-        skills = []
 
+    skills = []
+    if profile and profile.skills:
+        skills = [skill.strip() for skill in profile.skills.split(',') if skill.strip()]
+
+    # Static AI-like analysis (placeholder)
     job_text = f"{application.job.description} {application.job.requirements}".lower()
     hits = sum(1 for s in [s.lower() for s in skills] if s in job_text)
-    match_score = 20 + min(80, hits * 15)  # simple static heuristic baseline 20%
+    match_score = 20 + min(80, hits * 15)
 
     suggestions = [
         'Highlight your most relevant projects at the top of your resume.',

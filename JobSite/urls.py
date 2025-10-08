@@ -26,7 +26,5 @@ urlpatterns = [
     path('bookmarks/', include('bookmarks.urls')),
 ]
 
-
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# This will ensure that media files are served in your local development environment
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

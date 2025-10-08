@@ -36,7 +36,10 @@ def signup(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        if request.user.customuser.role == 'company':
+            return redirect('company_view')
+        else:
+            return redirect('dashboard')
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
