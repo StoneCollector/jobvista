@@ -5,11 +5,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.db.models import Q
+from collections import Counter
 
 from .forms import UserProfileForm, SignupForm
 from .models import *
 from .models import UserProfile
-from jobs.models import Job, JobCategory
+from jobs.models import Job, JobCategory, Company
+from .ml import extract_skills_from_text
 
 
 # Create your views here.
@@ -115,6 +118,74 @@ def profile_view(request):
         'skills_list': skills_list
     }
     return render(request, 'accounts/profile_view.html', context)
+
+
+def career_advice_view(request):
+    if request.method == 'POST':
+        resume_file = request.FILES.get('resume')
+        if not resume_file:
+            messages.error(request, 'Please upload a resume file.')
+            return redirect('career_advice')
+
+        try:
+            resume_text = resume_file.read().decode('utf-8', errors='ignore')
+        except Exception:
+            messages.error(request, 'Could not read the uploaded file.')
+            return redirect('career_advice')
+
+        extracted_skills = extract_skills_from_text(resume_text)
+
+        # Generate dynamic advice based on extracted skills
+        advice = {
+            'strengths': [],
+            'improvements': [
+                "Add a brief professional summary at the top to highlight your career goals.",
+                "Use action verbs (e.g., 'Developed,' 'Managed,' 'Implemented') to describe accomplishments.",
+                "Quantify achievements with numbers where possible (e.g., 'Increased efficiency by 15%')."
+            ]
+        }
+        if extracted_skills:
+            advice['strengths'].append(f"Great job highlighting your skills in: {', '.join(extracted_skills[:5])}.")
+        else:
+            advice['strengths'].append(
+                "Your resume was successfully read. For better results, ensure key skills are clearly listed as text.")
+
+        if len(extracted_skills) < 5:
+            advice['improvements'].append(
+                "Consider listing at least 5-7 core technical skills relevant to your target roles.")
+
+        # Find and rank company matches based on skills
+        companies = []
+        if extracted_skills:
+            skill_query = Q()
+            for skill in extracted_skills:
+                skill_query |= Q(description__icontains=skill) | Q(requirements__icontains=skill)
+
+            matching_jobs = Job.objects.filter(skill_query, is_active=True).values('company_id')
+
+            if matching_jobs.exists():
+                company_ids = [job['company_id'] for job in matching_jobs]
+                company_counts = Counter(company_ids)
+                top_company_ids = [cid for cid, count in company_counts.most_common(5)]
+
+                # Fetch companies and preserve order by match count
+                company_map = {c.id: c for c in Company.objects.filter(id__in=top_company_ids)}
+                companies = [company_map[cid] for cid in top_company_ids if cid in company_map]
+
+        # Fallback to popular companies if no matches are found
+        if not companies:
+            companies = Company.objects.filter(status="approved").annotate(num_jobs=models.Count('jobs')).order_by(
+                '-num_jobs')[:5]
+
+        context = {
+            'advice': advice,
+            'companies': companies,
+            'has_results': True,
+            'extracted_skills': extracted_skills
+        }
+        return render(request, 'accounts/career_advice.html', context)
+
+    return render(request, 'accounts/career_advice.html', {})
 
 
 @login_required

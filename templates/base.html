@@ -59,7 +59,7 @@
                             Find Jobs
                         </a>
                         <a href="{% url 'login' %}" class="px-3 py-2 rounded-md text-sm font-medium transition duration-300" style="color: var(--text-body);" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--text-body)'">For Employers</a>
-                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium transition duration-300" style="color: var(--text-body);" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--text-body)'">Career Advice</a>
+                        <a href="{% url 'career_advice' %}" class="px-3 py-2 rounded-md text-sm font-medium transition duration-300" style="color: var(--text-body);" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--text-body)'">Career Advice</a>
                         {% if user.is_authenticated %}
                             <a href="{% url 'user_bookmarks' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">
                                 <i class="fas fa-bookmark mr-1"></i>My Bookmarks

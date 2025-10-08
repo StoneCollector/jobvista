@@ -32,8 +32,11 @@
         <div class="p-2 sm:p-4">
           <div id="tab-resume" class="applicant-tab-content">
             {% if profile and profile.resume %}
-              <div class="h-[70vh] rounded-lg overflow-hidden border" style="border-color: var(--border);">
-                <iframe src="{{ profile.resume.url }}" width="100%" height="100%"></iframe>
+              <div class="text-center py-20">
+                <a href="{{ profile.resume.url }}" target="_blank" class="btn-primary-brand px-5 py-3 rounded-md text-lg font-semibold">
+                    <i class="fas fa-file-pdf mr-2"></i> View Resume
+                </a>
+                <p class="text-sm text-gray-500 mt-3">Click the button to open the resume in a new tab.</p>
               </div>
             {% else %}
               <div class="text-center py-20">
