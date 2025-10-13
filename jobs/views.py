@@ -627,6 +627,9 @@ def company_dashboard(request):
             'user': app.user
         })
     
+    # Get categories for job posting form
+    categories = JobCategory.objects.all()
+    
     context = {
         'company': company,
         'total_jobs': total_jobs,
@@ -636,6 +639,7 @@ def company_dashboard(request):
         'recent_jobs': active_jobs[:5],
         'recent_applications': recent_applications,
         'recent_activity': recent_activity,
+        'categories': categories,
     }
     
     return render(request, 'Company/dashboard.html', context)
@@ -722,6 +726,43 @@ def dashboard(request):
             skills = []
         setattr(job, 'top_skills', skills)
 
+    # Get user notifications
+    notifications = []
+    try:
+        from accounts.models import Notification
+        notifications = Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')[:5]
+    except Exception:
+        pass
+
+    # AI-powered job recommendations
+    ai_recommendations = []
+    try:
+        from accounts.ai_enhanced import ai_analyzer
+        user_skills = [skill.strip() for skill in (profile.skills or '').split(',') if skill.strip()]
+        
+        if user_skills:
+            # Get all active jobs for recommendation
+            all_jobs = Job.objects.filter(is_active=True).select_related('company')
+            job_listings = []
+            for job in all_jobs:
+                job_listings.append({
+                    'id': job.id,
+                    'title': job.title,
+                    'description': job.description,
+                    'requirements': job.requirements,
+                    'location': job.location,
+                    'salary_min': job.salary_min,
+                    'salary_max': job.salary_max,
+                    'company_name': job.company.name,
+                    'get_absolute_url': job.get_absolute_url()
+                })
+            
+            # Get AI recommendations
+            ai_recommendations = ai_analyzer.recommend_jobs(user_skills, job_listings)
+            
+    except Exception as e:
+        print(f"AI job recommendations failed: {e}")
+
     context = {
         'recent_jobs': recent_jobs,
         'saved': saved,
@@ -734,6 +775,8 @@ def dashboard(request):
         'profile_strength': completion,
         'next_hint': next_hint,
         'suggested_skill': suggested_skill,
+        'notifications': notifications,
+        'ai_recommendations': ai_recommendations[:5],  # Top 5 AI recommendations
     }
     return render(request, 'accounts/dashboard.html', context)
 

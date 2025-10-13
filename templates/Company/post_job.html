@@ -229,12 +229,9 @@
                                     <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Job Category</label>
                                     <select name="category" class="form-control">
                                         <option value="">Select Category</option>
-                                        <option value="technology">Technology</option>
-                                        <option value="finance">Finance</option>
-                                        <option value="marketing">Marketing</option>
-                                        <option value="sales">Sales</option>
-                                        <option value="hr">Human Resources</option>
-                                        <option value="operations">Operations</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-4">

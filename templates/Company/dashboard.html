@@ -723,13 +723,9 @@
                                     <label class="company-form-label">Category</label>
                                     <select name="category" class="company-form-control" required>
                                         <option value="">Select Category</option>
-                                        <option value="technology">Technology</option>
-                                        <option value="marketing">Marketing</option>
-                                        <option value="sales">Sales</option>
-                                        <option value="finance">Finance</option>
-                                        <option value="hr">Human Resources</option>
-                                        <option value="operations">Operations</option>
-                                        <option value="other">Other</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                             </div>

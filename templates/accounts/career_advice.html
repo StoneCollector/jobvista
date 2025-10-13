@@ -245,30 +245,39 @@
             </div>
 
             {% if has_results %}
-                <!-- Analysis Results -->
+                <!-- AI-Powered Career Insights -->
                 <div class="content-section">
                     <div class="text-center mb-4">
-                        <h3 class="font-bold mb-2" style="color: #1e293b;">Your Analysis Results</h3>
-                        <p class="text-muted">Here's what we found in your resume</p>
+                        <h3 class="font-bold mb-2" style="color: #1e293b;">
+                            <i class="fas fa-robot me-2" style="color: #f59e0b;"></i>AI-Powered Career Insights
+                        </h3>
+                        <p class="text-muted">Personalized recommendations based on your profile and market trends</p>
                     </div>
 
-                    <!-- Skills Overview -->
+                    <!-- Profile Insights -->
+                    {% if profile_insights %}
                     <div class="row mb-4">
                         <div class="col-md-6 mb-4">
-                            <div class="card border-0 shadow-sm" style="border-radius: 12px; background: #f8fafc;">
+                            <div class="card border-0 shadow-sm" style="border-radius: 12px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
                                 <div class="card-body p-4">
                                     <h5 class="font-bold mb-3" style="color: #1e293b;">
-                                        <i class="fas fa-code me-2" style="color: var(--accent);"></i>Technical Skills
+                                        <i class="fas fa-chart-line me-2" style="color: #f59e0b;"></i>Profile Completeness
                                     </h5>
-                                    {% if explicit_skills %}
-                                        <div class="d-flex flex-wrap gap-2">
-                                            {% for skill in explicit_skills %}
-                                                <span class="badge" style="background: var(--accent); color: white; border-radius: 15px; padding: 0.5rem 1rem;">{{ skill }}</span>
-                                            {% endfor %}
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-sm font-medium" style="color: #64748b;">Completion Score</span>
+                                            <span class="text-sm font-bold" style="color: #f59e0b;">{{ profile_insights.profile_completeness }}%</span>
                                         </div>
-                                    {% else %}
-                                        <p class="text-muted">No standard technical skills found.</p>
-                                    {% endif %}
+                                        <div class="progress" style="height: 8px; border-radius: 4px; background: #e2e8f0;">
+                                            <div class="progress-bar" style="width: {{ profile_insights.profile_completeness }}%; background: #f59e0b; border-radius: 4px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="badge" style="background: #f59e0b; color: white; border-radius: 12px;">{{ profile_insights.market_position|title }} Level</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="badge" style="background: #10b981; color: white; border-radius: 12px;">{{ profile_insights.growth_potential|title }} Growth Potential</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -277,21 +286,106 @@
                             <div class="card border-0 shadow-sm" style="border-radius: 12px; background: #f8fafc;">
                                 <div class="card-body p-4">
                                     <h5 class="font-bold mb-3" style="color: #1e293b;">
-                                        <i class="fas fa-users me-2" style="color: var(--accent);"></i>Soft Skills
+                                        <i class="fas fa-star me-2" style="color: #f59e0b;"></i>Your Strengths
                                     </h5>
-                                    {% if inferred_skills %}
-                                        <div class="d-flex flex-wrap gap-2">
-                                            {% for skill in inferred_skills %}
-                                                <span class="badge" style="background: #e3f2fd; color: #1976d2; border-radius: 15px; padding: 0.5rem 1rem;">{{ skill|title }}</span>
+                                    {% if profile_insights.strengths %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for strength in profile_insights.strengths %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>{{ strength }}
+                                                </li>
                                             {% endfor %}
-                                        </div>
+                                        </ul>
                                     {% else %}
-                                        <p class="text-muted">No soft skills inferred from action verbs.</p>
+                                        <p class="text-muted">Complete your profile to see your strengths.</p>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
                     </div>
+                    {% endif %}
+
+                    <!-- Career Advice -->
+                    {% if career_advice %}
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm" style="border-radius: 12px; background: #f0f9ff;">
+                                <div class="card-body p-4">
+                                    <h5 class="font-bold mb-3" style="color: #1e293b;">
+                                        <i class="fas fa-lightbulb me-2" style="color: #3b82f6;"></i>Career Recommendations
+                                    </h5>
+                                    {% if career_advice.recommendations %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for rec in career_advice.recommendations %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-arrow-right me-2" style="color: #3b82f6;"></i>{{ rec }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted">Add more skills to get personalized recommendations.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm" style="border-radius: 12px; background: #fef3c7;">
+                                <div class="card-body p-4">
+                                    <h5 class="font-bold mb-3" style="color: #1e293b;">
+                                        <i class="fas fa-arrow-up me-2" style="color: #f59e0b;"></i>Next Steps
+                                    </h5>
+                                    {% if career_advice.next_steps %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for step in career_advice.next_steps %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-check me-2" style="color: #f59e0b;"></i>{{ step }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted">Complete your profile to get next steps.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skill Gaps -->
+                    {% if career_advice.skill_gaps %}
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: #fef2f2;">
+                        <div class="card-body p-4">
+                            <h5 class="font-bold mb-3" style="color: #1e293b;">
+                                <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>Skills to Learn
+                            </h5>
+                            <p class="text-muted mb-3">These high-demand skills could boost your career prospects:</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for skill in career_advice.skill_gaps %}
+                                    <span class="badge" style="background: #fecaca; color: #dc2626; border-radius: 15px; padding: 0.5rem 1rem;">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Market Insights -->
+                    {% if career_advice.market_insights %}
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: #f0fdf4;">
+                        <div class="card-body p-4">
+                            <h5 class="font-bold mb-3" style="color: #1e293b;">
+                                <i class="fas fa-chart-bar me-2" style="color: #10b981;"></i>Market Insights
+                            </h5>
+                            <ul class="list-unstyled mb-0">
+                                {% for insight in career_advice.market_insights %}
+                                    <li class="mb-2">
+                                        <i class="fas fa-info-circle me-2" style="color: #10b981;"></i>{{ insight }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
 
                     <!-- ATS Score -->
                     {% if ats_score %}

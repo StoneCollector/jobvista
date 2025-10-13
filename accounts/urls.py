@@ -10,6 +10,9 @@ urlpatterns = [
     path('profile/edit/', profile_edit, name='profile_edit'),
     path('career-advice/', career_advice_view, name='career_advice'),
     path('job-alerts/', job_alerts, name='job_alerts'),
+    path('notifications/', notifications_view, name='notifications'),
+    path('chatbot/', chatbot_view, name='chatbot'),
+    path('api/chatbot/', chatbot_api, name='chatbot_api'),
     
     # API endpoints
     path('api/notifications/', get_notifications, name='api_notifications'),

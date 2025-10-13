@@ -8,6 +8,14 @@ try:
 except ImportError:
     textstat = None
 
+# Import enhanced AI analyzer
+try:
+    from .ai_enhanced import ai_analyzer
+    HAS_ENHANCED_AI = True
+except ImportError:
+    HAS_ENHANCED_AI = False
+    ai_analyzer = None
+
 
 # --- Text Processing Utilities ---
 
@@ -57,7 +65,17 @@ def canonicalize_skill(tok: str) -> str:
 def extract_skills(
         text: str, custom_list: Optional[List[str]] = None
 ) -> List[str]:
-    """Extract a sorted list of unique explicit skills from text."""
+    """Extract a sorted list of unique explicit skills from text using AI."""
+    if HAS_ENHANCED_AI and ai_analyzer:
+        try:
+            # Use enhanced AI skill extraction
+            ai_skills = ai_analyzer.extract_skills_from_text(text)
+            if ai_skills:
+                return ai_skills
+        except Exception as e:
+            print(f"AI skill extraction failed, using fallback: {e}")
+    
+    # Fallback to pattern-based extraction
     normalized_text = normalize(text)
     toks = normalized_text.split()
     found_skills = set()
@@ -104,8 +122,23 @@ PASSIVE_HINT_PATTERN = re.compile(r"\b(?:was|were|is|are|been)\b\s+\w+ed\b", re.
 def resume_quality(resume_text: str) -> Dict[str, object]:
     """
     Analyzes resume text for quality and provides actionable feedback
-    with context for each issue.
+    with context for each issue using AI.
     """
+    if HAS_ENHANCED_AI and ai_analyzer:
+        try:
+            # Use enhanced AI analysis
+            ai_analysis = ai_analyzer.analyze_resume_quality(resume_text)
+            return {
+                "score": ai_analysis.get('score', 0),
+                "suggestions": ai_analysis.get('suggestions', []),
+                "strengths": ai_analysis.get('strengths', []),
+                "areas_for_improvement": ai_analysis.get('areas_for_improvement', []),
+                "readability": {"score": ai_analysis.get('score', 0)}
+            }
+        except Exception as e:
+            print(f"AI resume analysis failed, using fallback: {e}")
+    
+    # Fallback to pattern-based analysis
     suggestions = []
 
     for phrase in GENERIC_PHRASES:

@@ -205,14 +205,28 @@
     <!-- Main Content -->
     <div class="main-content">
         <div class="profile-wrapper">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+            <!-- Toast Container -->
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+                            <div class="toast-header" style="background: {% if message.tags == 'error' %}#dc3545{% elif message.tags == 'warning' %}#ffc107{% elif message.tags == 'info' %}#0dcaf0{% else %}#198754{% endif %}; color: white;">
+                                <i class="fas fa-{% if message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% elif message.tags == 'info' %}info-circle{% else %}check-circle{% endif %} me-2"></i>
+                                <strong class="me-auto">
+                                    {% if message.tags == 'error' %}Error
+                                    {% elif message.tags == 'warning' %}Warning
+                                    {% elif message.tags == 'info' %}Info
+                                    {% else %}Success{% endif %}
+                                </strong>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                            </div>
+                            <div class="toast-body" style="background: white; color: #333;">
+                                {{ message }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
 
             <!-- Profile Header -->
             <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px; background: var(--gradient-primary);">
@@ -334,6 +348,13 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarToggle.addEventListener('click', function() {
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('expanded');
+    });
+    
+    // Initialize toasts
+    const toastElements = document.querySelectorAll('.toast');
+    toastElements.forEach(function(toastElement) {
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
     });
 });
 </script>

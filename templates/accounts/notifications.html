@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - JobVista{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-6 font-bold mb-2" style="color: var(--text-primary);">
+                        <i class="fas fa-bell me-2" style="color: var(--accent);"></i>Notifications
+                    </h1>
+                    <p class="text-muted mb-0">
+                        {% if unread_count > 0 %}
+                            You have {{ unread_count }} unread notification{{ unread_count|pluralize }}
+                        {% else %}
+                            All caught up! No new notifications.
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'job_alerts' %}" class="btn btn-outline">
+                        <i class="fas fa-cog me-2"></i>Manage Alerts
+                    </a>
+                    {% if unread_count > 0 %}
+                    <form method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" name="mark_all_read" value="true">
+                            <i class="fas fa-check-double me-2"></i>Mark All Read
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Notifications List -->
+            {% if notifications %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        {% for notification in notifications %}
+                        <div class="d-flex align-items-start gap-3 p-4 {% if not forloop.last %}border-bottom{% endif %}" style="border-color: #f1f5f9;">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 40px; height: 40px; background: {% if notification.is_read %}#f8fafc{% else %}#fef3c7{% endif %}; color: {% if notification.is_read %}#64748b{% else %}#f59e0b{% endif %};">
+                                    <i class="fas fa-bell" style="font-size: 1rem;"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="font-semibold mb-1 {% if not notification.is_read %}font-bold{% endif %}" 
+                                            style="color: var(--text-primary);">
+                                            {{ notification.title }}
+                                            {% if not notification.is_read %}
+                                            <span class="badge" style="background: #ef4444; color: white; font-size: 0.6rem; margin-left: 0.5rem;">New</span>
+                                            {% endif %}
+                                        </h6>
+                                        <p class="text-muted mb-2" style="font-size: 0.9rem; line-height: 1.4;">
+                                            {{ notification.message }}
+                                        </p>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                                        {% if not notification.is_read %}
+                                        <form method="POST" class="d-inline ms-2">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline" style="font-size: 0.75rem;">
+                                                <i class="fas fa-check me-1"></i>Mark Read
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if notification.link %}
+                                <a href="{{ notification.link }}" class="btn btn-sm btn-outline" style="font-size: 0.8rem;">
+                                    <i class="fas fa-external-link-alt me-1"></i>View Details
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if notifications.has_other_pages %}
+                <nav aria-label="Notifications pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if notifications.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ notifications.number }} of {{ notifications.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if notifications.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-bell-slash" style="font-size: 4rem; color: #cbd5e1;"></i>
+                    </div>
+                    <h4 class="font-semibold mb-2" style="color: var(--text-primary);">No notifications yet</h4>
+                    <p class="text-muted mb-4">We'll notify you when relevant jobs are posted or when there are updates to your applications.</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'job_alerts' %}" class="btn btn-primary">
+                            <i class="fas fa-cog me-2"></i>Set Up Job Alerts
+                        </a>
+                        <a href="{% url 'find_jobs' %}" class="btn btn-outline">
+                            <i class="fas fa-search me-2"></i>Browse Jobs
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .font-bold {
+        font-weight: 700;
+    }
+    
+    .notification-item:hover {
+        background-color: #f8fafc;
+    }
+    
+    .badge {
+        font-weight: 600;
+    }
+</style>
+{% endblock %}

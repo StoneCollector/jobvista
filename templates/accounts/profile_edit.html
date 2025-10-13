@@ -297,6 +297,102 @@
                             </div>
                         </div>
                     </form>
+                    
+                    <!-- AI Resume Analysis Results -->
+                    {% if resume_analysis %}
+                    <div class="content-section mt-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <i class="fas fa-robot me-2" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                            <h4 class="font-bold mb-0" style="color: #1e293b;">AI Resume Analysis</h4>
+                        </div>
+                        
+                        <!-- Resume Quality Score -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-0 shadow-sm" style="border-radius: 12px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                                    <div class="card-body p-4">
+                                        <h5 class="font-bold mb-3" style="color: #1e293b;">
+                                            <i class="fas fa-chart-line me-2" style="color: #f59e0b;"></i>Resume Quality Score
+                                        </h5>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="text-sm font-medium" style="color: #64748b;">Overall Score</span>
+                                                <span class="text-lg font-bold" style="color: #f59e0b;">{{ resume_analysis.score }}/100</span>
+                                            </div>
+                                            <div class="progress" style="height: 10px; border-radius: 5px; background: #e2e8f0;">
+                                                <div class="progress-bar" style="width: {{ resume_analysis.score }}%; background: #f59e0b; border-radius: 5px;"></div>
+                                            </div>
+                                        </div>
+                                        {% if resume_analysis.score >= 80 %}
+                                            <span class="badge" style="background: #10b981; color: white; border-radius: 12px;">Excellent</span>
+                                        {% elif resume_analysis.score >= 60 %}
+                                            <span class="badge" style="background: #f59e0b; color: white; border-radius: 12px;">Good</span>
+                                        {% else %}
+                                            <span class="badge" style="background: #ef4444; color: white; border-radius: 12px;">Needs Improvement</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-0 shadow-sm" style="border-radius: 12px; background: #f8fafc;">
+                                    <div class="card-body p-4">
+                                        <h5 class="font-bold mb-3" style="color: #1e293b;">
+                                            <i class="fas fa-star me-2" style="color: #f59e0b;"></i>Strengths
+                                        </h5>
+                                        {% if resume_analysis.strengths %}
+                                            <ul class="list-unstyled mb-0">
+                                                {% for strength in resume_analysis.strengths %}
+                                                    <li class="mb-2">
+                                                        <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>{{ strength }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-muted">No specific strengths identified.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Areas for Improvement -->
+                        {% if resume_analysis.areas_for_improvement %}
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: #fef2f2;">
+                            <div class="card-body p-4">
+                                <h5 class="font-bold mb-3" style="color: #1e293b;">
+                                    <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>Areas for Improvement
+                                </h5>
+                                <ul class="list-unstyled mb-0">
+                                    {% for area in resume_analysis.areas_for_improvement %}
+                                        <li class="mb-2">
+                                            <i class="fas fa-arrow-right me-2" style="color: #ef4444;"></i>{{ area }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Suggestions -->
+                        {% if resume_analysis.suggestions %}
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: #f0f9ff;">
+                            <div class="card-body p-4">
+                                <h5 class="font-bold mb-3" style="color: #1e293b;">
+                                    <i class="fas fa-lightbulb me-2" style="color: #3b82f6;"></i>AI Suggestions
+                                </h5>
+                                <ul class="list-unstyled mb-0">
+                                    {% for suggestion in resume_analysis.suggestions %}
+                                        <li class="mb-2">
+                                            <i class="fas fa-info-circle me-2" style="color: #3b82f6;"></i>{{ suggestion }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
