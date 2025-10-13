@@ -1,5 +1,7 @@
 import re
 from typing import Dict, List, Optional
+from collections import Counter
+import math
 
 try:
     import textstat
@@ -140,29 +142,133 @@ def resume_quality(resume_text: str) -> Dict[str, object]:
 
 def check_ats_friendliness(text: str) -> Dict[str, object]:
     """
-    Performs basic checks for ATS compatibility.
+    Performs comprehensive checks for ATS compatibility.
     """
     report = {
         "has_contact_info": False,
         "uses_standard_sections": False,
         "warnings": [],
+        "score": 0,
+        "recommendations": []
     }
 
     # Check for email and phone
-    if re.search(r"[\w.-]+@[\w.-]+", text) and re.search(r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", text):
+    email_match = re.search(r"[\w.-]+@[\w.-]+", text)
+    phone_match = re.search(r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", text)
+    
+    if email_match and phone_match:
         report["has_contact_info"] = True
+        report["score"] += 20
+    elif email_match or phone_match:
+        report["warnings"].append("Include both email and phone number for better contact.")
+        report["score"] += 10
+    else:
+        report["warnings"].append("Missing contact information. Add email and phone number.")
 
     # Check for standard section headers
-    standard_sections = ["education", "experience", "skills", "projects"]
+    standard_sections = ["education", "experience", "skills", "projects", "summary", "objective"]
     found_sections = [s for s in standard_sections if s in text.lower()]
-    if len(found_sections) >= 2:
+    if len(found_sections) >= 3:
         report["uses_standard_sections"] = True
+        report["score"] += 25
+    elif len(found_sections) >= 2:
+        report["score"] += 15
+        report["warnings"].append("Add more standard sections like 'Summary' or 'Projects'.")
     else:
         report["warnings"].append("Missing standard sections like 'Experience' or 'Skills'. Use simple text headers.")
+
+    # Check for keywords density
+    word_count = len(text.split())
+    if word_count < 200:
+        report["warnings"].append("Resume is too short. Aim for 200-400 words.")
+    elif word_count > 600:
+        report["warnings"].append("Resume is too long. Keep it concise (400-600 words).")
+    else:
+        report["score"] += 15
+
+    # Check for action verbs
+    action_verbs = ["achieved", "developed", "implemented", "managed", "created", "improved", "increased", "reduced"]
+    verb_count = sum(1 for verb in action_verbs if verb in text.lower())
+    if verb_count >= 3:
+        report["score"] += 15
+    else:
+        report["recommendations"].append("Use more action verbs to describe your achievements.")
+
+    # Check for quantifiable results
+    if re.search(r'\d+%|\$\d+|\d+\+', text):
+        report["score"] += 10
+    else:
+        report["recommendations"].append("Include quantifiable results and metrics in your experience.")
 
     # Check for complex layouts (heuristic)
     if "\t" in text or "  " in text.replace("\n", ""):
         report["warnings"].append(
             "Resume may contain complex formatting (tables or columns) that can confuse ATS. Use a single-column layout.")
+        report["score"] -= 10
+
+    # Check for file format compatibility
+    if "pdf" in text.lower() or "doc" in text.lower():
+        report["recommendations"].append("Save your resume as a PDF for better ATS compatibility.")
+
+    # Calculate final score
+    report["score"] = max(0, min(100, report["score"]))
+    
+    if report["score"] >= 80:
+        report["recommendations"].append("Great! Your resume is ATS-friendly.")
+    elif report["score"] >= 60:
+        report["recommendations"].append("Good ATS compatibility. Consider the suggestions above.")
+    else:
+        report["recommendations"].append("Your resume needs improvement for ATS compatibility.")
 
     return report
+
+
+def calculate_skill_match_score(user_skills: List[str], job_requirements: str) -> float:
+    """
+    Calculate a match score between user skills and job requirements.
+    """
+    if not user_skills or not job_requirements:
+        return 0.0
+    
+    job_text = job_requirements.lower()
+    matched_skills = []
+    
+    for skill in user_skills:
+        skill_lower = skill.lower().strip()
+        if skill_lower in job_text:
+            matched_skills.append(skill)
+    
+    if not matched_skills:
+        return 0.0
+    
+    # Calculate score based on matched skills ratio and total skills
+    match_ratio = len(matched_skills) / len(user_skills)
+    skill_density = len(matched_skills) / len(job_text.split()) * 100
+    
+    # Weighted score: 70% match ratio, 30% skill density
+    score = (match_ratio * 0.7 + min(skill_density, 1.0) * 0.3) * 100
+    
+    return min(100.0, max(0.0, score))
+
+
+def extract_key_phrases(text: str, max_phrases: int = 10) -> List[str]:
+    """
+    Extract key phrases from text using simple frequency analysis.
+    """
+    # Remove common stop words
+    stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'}
+    
+    # Extract words and phrases
+    words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+    words = [w for w in words if w not in stop_words]
+    
+    # Count frequency
+    word_counts = Counter(words)
+    
+    # Get most common phrases
+    phrases = []
+    for word, count in word_counts.most_common(max_phrases):
+        if count > 1:  # Only include words that appear more than once
+            phrases.append(word)
+    
+    return phrases

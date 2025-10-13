@@ -86,7 +86,12 @@ class Job(models.Model):
         return f"{self.title} at {self.company.name}"
 
     def get_absolute_url(self):
-        return reverse('job_detail', kwargs={'slug': self.slug})
+        try:
+            return reverse('job_detail', kwargs={'slug': self.slug})
+        except:
+            # Fallback to a safe URL if slug is problematic
+            safe_slug = self.slug.replace('/', '-').replace('\\', '-')
+            return reverse('job_detail', kwargs={'slug': safe_slug})
 
     def is_expired(self):
         if self.application_deadline:

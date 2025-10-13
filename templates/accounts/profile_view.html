@@ -1,65 +1,210 @@
-<!-- templates/accounts/profile_view.html -->
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}{{ profile.first_name }} {{ profile.last_name }} - Profile{% endblock %}
+
 {% block content %}
-<div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
-  <div class="max-w-5xl mx-auto">
-    <style>
-        .profile-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0;
+<style>
+    .profile-container {
+        display: flex;
+        min-height: 100vh;
+        background: #f8fafc;
+    }
+    
+    .sidebar {
+        width: 280px;
+        background: white;
+        box-shadow: 0 0 20px rgba(0,0,0,0.08);
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 1000;
+        border-right: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar.collapsed {
+        width: 80px;
+    }
+    
+    .sidebar.collapsed .sidebar-header h5,
+    .sidebar.collapsed .sidebar-header p,
+    .sidebar.collapsed .sidebar-header h6,
+    .sidebar.collapsed .nav-link span {
+        display: none;
+    }
+    
+    .sidebar.collapsed .nav-link {
+        justify-content: center;
+        padding: 0.875rem 1rem;
+    }
+    
+    .sidebar.collapsed .sidebar-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .sidebar.collapsed .sidebar-header .d-flex {
+        justify-content: center;
+    }
+    
+    .sidebar.collapsed .sidebar-header .d-flex > div:not(.rounded-circle) {
+        display: none;
+    }
+    
+    #sidebarToggle:hover {
+        background: #d97706 !important;
+        transform: scale(1.05);
+    }
+    
+    #sidebarToggle:active {
+        transform: scale(0.95);
+    }
+    
+    .main-content {
+        flex: 1;
+        margin-left: 280px;
+        padding: 0;
+        background: #f8fafc;
+        min-height: 100vh;
+        transition: all 0.3s ease;
+    }
+    
+    .main-content.expanded {
+        margin-left: 80px;
+    }
+    
+    .profile-wrapper {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .sidebar-header {
+        padding: 2rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        background: white;
+    }
+    
+    .sidebar-nav {
+        padding: 1rem 0;
+    }
+    
+    .nav-item {
+        margin: 0.125rem 0;
+    }
+    
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.875rem 1.5rem;
+        color: #64748b;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+        font-weight: 500;
+    }
+    
+    .nav-link:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    
+    .nav-link.active {
+        background: #fef3c7;
+        color: #d97706;
+        border-left-color: #f59e0b;
+    }
+    
+    .nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 100%;
+            position: relative;
+            height: auto;
         }
-        .profile-header {
-            background: linear-gradient(135deg, rgba(74,108,253,0.9) 0%, rgba(53,86,231,0.9) 100%);
-            color: white;
-            padding: 32px;
-            border-radius: 16px;
-            margin-bottom: 24px;
+        
+        .main-content {
+            margin-left: 0;
         }
-        .profile-picture {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .profile-section {
-            backdrop-filter: blur(8px);
-            background: rgba(255,255,255,.6);
-            border: 1px solid #ffffff33;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-            margin-bottom: 16px;
-        }
-        .skill-tag {
-            display: inline-block;
-            background: #e3f2fd;
-            color: #1565c0;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.9em;
-            margin: 3px;
-        }
-        .info-item {
-            margin-bottom: 15px;
-        }
-        .info-label {
-            font-weight: 600;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        .info-value {
-            color: #333;
-        }
-        .no-data {
-            color: #999;
-            font-style: italic;
-        }
-    </style>
-    <div class="profile-container">
+    }
+</style>
+
+<div class="profile-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="d-flex align-items-center">
+                <div id="sidebarToggle" class="rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                     style="width: 40px; height: 40px; background: #f59e0b; color: white; cursor: pointer; transition: all 0.3s ease;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 font-semibold" style="color: #1e293b;">{{ user.first_name|default:user.username }}</h6>
+                    <p class="mb-0 text-sm" style="color: #64748b;">Welcome back</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'find_jobs' %}" class="nav-link">
+                    <i class="fas fa-search"></i>
+                    <span>Find Jobs</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'user_bookmarks' %}" class="nav-link">
+                    <i class="fas fa-bookmark"></i>
+                    <span>My Bookmarks</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'my_applications' %}" class="nav-link">
+                    <i class="fas fa-file-alt"></i>
+                    <span>My Applications</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'profile_view' %}" class="nav-link active">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'job_alerts' %}" class="nav-link">
+                    <i class="fas fa-bell"></i>
+                    <span>Job Alerts</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'career_advice' %}" class="nav-link">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Career Advice</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'logout' %}" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="profile-wrapper">
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -69,103 +214,127 @@
                 {% endfor %}
             {% endif %}
 
-            <div class="profile-header text-center card-shadow">
-                {% if profile.profile_picture %}
-                    <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture mb-3">
-                {% else %}
-                    <div class="profile-picture mx-auto mb-3 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.2);">
-                        <i class="fas fa-user fa-3x"></i>
-                    </div>
-                {% endif %}
-
-                <h2 class="mb-1">
-                    {% if profile.first_name or profile.last_name %}
-                        {{ profile.first_name }} {{ profile.last_name }}
+            <!-- Profile Header -->
+            <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px; background: var(--gradient-primary);">
+                <div class="card-body p-5 text-center text-white">
+                    {% if profile.profile_picture %}
+                        <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" 
+                             class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
                     {% else %}
-                        {{ profile.user.username }}
+                        <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                             style="width: 120px; height: 120px; background: rgba(255,255,255,0.2); border: 4px solid white;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
                     {% endif %}
-                </h2>
-                <p class="mb-0 opacity-75">@{{ profile.user.username }}</p>
 
-                {% if is_own_profile %}
-                    <div class="mt-3">
-                        <a href="{% url 'profile_edit' %}" class="btn-secondary-brand px-3 py-2 rounded-md text-sm">
-                            <i class="fas fa-edit"></i> Edit Profile
+                    <h2 class="font-bold mb-2">
+                        {% if profile.first_name or profile.last_name %}
+                            {{ profile.first_name }} {{ profile.last_name }}
+                        {% else %}
+                            {{ profile.user.username }}
+                        {% endif %}
+                    </h2>
+                    <p class="mb-3 opacity-75">@{{ profile.user.username }}</p>
+
+                    {% if is_own_profile %}
+                        <a href="{% url 'profile_edit' %}" class="btn btn-light">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
                         </a>
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <div class="profile-section">
-                        <h4 class="mb-3" style="color: var(--text-heading);">Contact Information</h4>
-
-                        <div class="info-item">
-                            <div class="info-label">Email</div>
-                            <div class="info-value">
-                                {% if profile.email %}
-                                    <a href="mailto:{{ profile.email }}">{{ profile.email }}</a>
-                                {% else %}
-                                    <span class="no-data">Not provided</span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">Phone</div>
-                            <div class="info-value">
-                                {% if profile.phone %}
-                                    {{ profile.phone }}
-                                {% else %}
-                                    <span class="no-data">Not provided</span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">Member Since</div>
-                            <div class="info-value">{{ profile.created_at|date:"F Y" }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="profile-section">
-                        <h4 class="mb-3" style="color: var(--text-heading);">Documents</h4>
-
-                        <div class="info-item">
-                            <div class="info-label">Resume</div>
-                            <div class="info-value">
-                                {% if profile.resume %}
-                                    <a href="{{ profile.resume.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-download"></i> Download Resume
-                                    </a>
-                                {% else %}
-                                    <span class="no-data">No resume uploaded</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="profile-section mt-2">
-              <h4 class="mb-3" style="color: var(--text-heading);">Skills & Expertise</h4>
-              {% if skills_list %}
-                <div>
-                  {% for skill in skills_list %}
-                    <span class="pill">{{ skill }}</span>
-                  {% endfor %}
+            <!-- Profile Information -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card border-0 shadow-md" style="border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h4 class="font-bold mb-3" style="color: var(--text-primary);">Contact Information</h4>
+                            
+                            <div class="mb-3">
+                                <div class="font-medium text-muted mb-1">Email</div>
+                                <div>
+                                    {% if profile.email %}
+                                        <a href="mailto:{{ profile.email }}" class="text-decoration-none">{{ profile.email }}</a>
+                                    {% else %}
+                                        <span class="text-muted">Not provided</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="font-medium text-muted mb-1">Phone</div>
+                                <div>
+                                    {% if profile.phone %}
+                                        {{ profile.phone }}
+                                    {% else %}
+                                        <span class="text-muted">Not provided</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="font-medium text-muted mb-1">Member Since</div>
+                                <div class="font-bold">{{ profile.created_at|date:"F Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              {% else %}
-                <p class="no-data mb-3">No skills added yet</p>
-                {% if is_own_profile %}
-                  <a href="{% url 'profile_edit' %}" class="btn-secondary-brand px-3 py-2 rounded-md text-sm">Add Skills</a>
-                {% endif %}
-              {% endif %}
+
+                <div class="col-md-6 mb-4">
+                    <div class="card border-0 shadow-md" style="border-radius: 15px;">
+                        <div class="card-body p-4">
+                            <h4 class="font-bold mb-3" style="color: var(--text-primary);">Documents</h4>
+                            
+                            <div class="mb-3">
+                                <div class="font-medium text-muted mb-1">Resume</div>
+                                <div>
+                                    {% if profile.resume %}
+                                        <a href="{{ profile.resume.url }}" target="_blank" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-download me-2"></i>Download Resume
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">No resume uploaded</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills & Expertise -->
+            <div class="card border-0 shadow-md mb-4" style="border-radius: 15px;">
+                <div class="card-body p-4">
+                    <h4 class="font-bold mb-3" style="color: var(--text-primary);">Skills & Expertise</h4>
+                    {% if skills_list %}
+                        <div>
+                            {% for skill in skills_list %}
+                                <span class="badge me-2 mb-2" style="background: var(--accent); color: white; border-radius: 15px; padding: 8px 16px;">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-3">No skills added yet</p>
+                        {% if is_own_profile %}
+                            <a href="{% url 'profile_edit' %}" class="btn btn-primary">Add Skills</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
-  </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+    });
+});
+</script>
 {% endblock %}

@@ -1,156 +1,721 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Applicant: {{ application.user.get_full_name|default:application.user.username }} - JobVista{% endblock %}
 
 {% block content %}
-<div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
-  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+<style>
+    .company-dashboard-container {
+        display: flex;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    .company-sidebar {
+        width: 280px;
+        background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+        color: white;
+        padding: 0;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 30px rgba(30, 58, 138, 0.25);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .company-main-content {
+        flex: 1;
+        margin-left: 280px;
+        transition: all 0.3s ease;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    .company-content-wrapper {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .company-sidebar-header {
+        padding: 2rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+    }
+    
+    .company-sidebar-nav {
+        padding: 1rem 0;
+    }
+    
+    .company-nav-item {
+        display: flex;
+        align-items: center;
+        padding: 0.875rem 1.5rem;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        margin: 0.25rem 0;
+    }
+    
+    .company-nav-item:hover,
+    .company-nav-item.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border-left-color: #fbbf24;
+        transform: translateX(4px);
+    }
+    
+    .company-nav-item i {
+        width: 20px;
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+    }
+    
+    .company-nav-item span {
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    
+    .company-content-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 8px 32px rgba(30, 58, 138, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .company-content-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(30, 58, 138, 0.15);
+    }
+    
+    .company-section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .company-section-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .applicant-header {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+    }
+    
+    .applicant-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+        color: white;
+        margin-right: 1.5rem;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-accepted {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-rejected {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .company-btn-primary {
+        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+        color: white;
+        border: none;
+        padding: 0.875rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 16px rgba(30, 64, 175, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .company-btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .company-btn-primary:hover {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(30, 64, 175, 0.4);
+    }
+    
+    .company-btn-primary:hover::before {
+        left: 100%;
+    }
+    
+    .company-btn-secondary {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(100, 116, 139, 0.2);
+    }
+    
+    .company-btn-secondary:hover {
+        background: linear-gradient(135deg, #475569 0%, #334155 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(100, 116, 139, 0.3);
+    }
+    
+     .btn-success {
+         background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+         color: white;
+         border: none;
+         padding: 0.75rem 1.25rem;
+         border-radius: 12px;
+         font-size: 0.875rem;
+         cursor: pointer;
+         transition: all 0.4s ease;
+         text-decoration: none;
+         display: inline-block;
+         font-weight: 600;
+         box-shadow: 0 4px 16px rgba(5, 150, 105, 0.2);
+     }
+     
+     .btn-success:hover {
+         background: linear-gradient(135deg, #047857 0%, #059669 100%);
+         color: white;
+         text-decoration: none;
+         transform: translateY(-2px);
+         box-shadow: 0 8px 24px rgba(5, 150, 105, 0.4);
+     }
+     
+     .btn-danger {
+         background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+         color: white;
+         border: none;
+         padding: 0.75rem 1.25rem;
+         border-radius: 12px;
+         font-size: 0.875rem;
+         cursor: pointer;
+         transition: all 0.4s ease;
+         text-decoration: none;
+         display: inline-block;
+         font-weight: 600;
+         box-shadow: 0 4px 16px rgba(220, 38, 38, 0.2);
+     }
+     
+     .btn-danger:hover {
+         background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+         color: white;
+         text-decoration: none;
+         transform: translateY(-2px);
+         box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+     }
+     
+     .btn-warning {
+         background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+         color: white;
+         border: none;
+         padding: 0.75rem 1.25rem;
+         border-radius: 12px;
+         font-size: 0.875rem;
+         cursor: pointer;
+         transition: all 0.4s ease;
+         text-decoration: none;
+         display: inline-block;
+         font-weight: 600;
+         box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+     }
+     
+     .btn-warning:hover {
+         background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+         color: white;
+         text-decoration: none;
+         transform: translateY(-2px);
+         box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
+     }
+    
+    .tab-navigation {
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 2rem;
+    }
+    
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: none;
+        color: #64748b;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-bottom: 2px solid transparent;
+    }
+    
+    .tab-button.active {
+        color: #1e40af;
+        border-bottom-color: #1e40af;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .info-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .info-value {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+        .company-sidebar {
+            width: 100%;
+            position: relative;
+            height: auto;
+        }
+        
+        .company-main-content {
+            margin-left: 0;
+        }
+        
+        .company-content-wrapper {
+            padding: 1rem;
+        }
+    }
+</style>
 
-    <main class="lg:col-span-8 space-y-6">
-      <div class="flex items-center gap-4">
-        <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-3xl">
+<div class="company-dashboard-container">
+    <!-- Company Sidebar -->
+    <div class="company-sidebar">
+        <div class="company-sidebar-header">
+            <div class="d-flex align-items-center justify-content-center">
+                {% if company.logo %}
+                    <img src="{{ company.logo.url }}" alt="{{ company.name }}" style="width: 50px; height: 50px; border-radius: 12px; margin-right: 1rem;">
+                {% else %}
+                    <div style="width: 50px; height: 50px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                        <i class="fas fa-building"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <h5 class="mb-0">{{ company.name }}</h5>
+                    <p class="mb-0 opacity-75" style="font-size: 0.8rem;">Company Dashboard</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="company-sidebar-nav">
+            <a href="{% url 'company_dashboard' %}" class="company-nav-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'company_dashboard' %}#post-job" class="company-nav-item">
+                <i class="fas fa-plus"></i>
+                <span>Post New Job</span>
+            </a>
+            <a href="{% url 'company_applicants' %}" class="company-nav-item active">
+                <i class="fas fa-users"></i>
+                <span>All Applicants</span>
+            </a>
+            <a href="{% url 'company_view' %}" class="company-nav-item">
+                <i class="fas fa-briefcase"></i>
+                <span>My Jobs</span>
+            </a>
+            <a href="{% url 'update_company' company.id %}" class="company-nav-item">
+                <i class="fas fa-building"></i>
+                <span>Company Profile</span>
+            </a>
+            <a href="{% url 'logout' %}" class="company-nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="company-main-content">
+        <div class="company-content-wrapper">
+            <!-- Applicant Header -->
+            <div class="applicant-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="applicant-avatar">
             {{ application.user.first_name|first|default:application.user.username|first|upper }}
         </div>
         <div>
-            <h1 class="text-3xl font-bold" style="color: var(--text-heading);">{{ application.user.get_full_name|default:application.user.username }}</h1>
-            <p class="text-gray-600">Applied to <a href="{{ application.job.get_absolute_url }}" class="link">{{ application.job.title }}</a> • {{ application.created_at|timesince }} ago</p>
-            <div class="mt-2 flex items-center gap-4 text-sm text-gray-500">
-                <span><i class="fas fa-envelope mr-1"></i>{{ application.user.email }}</span>
-                {% if profile.phone_number %}<span><i class="fas fa-phone mr-1"></i>{{ profile.phone_number }}</span>{% endif %}
+                                <h1 class="mb-1">{{ application.user.get_full_name|default:application.user.username }}</h1>
+                                <p class="mb-2 opacity-90">Applied to {{ application.job.title }} • {{ application.created_at|timesince }} ago</p>
+                                <div class="d-flex align-items-center gap-3">
+                                    <span><i class="fas fa-envelope me-1"></i>{{ application.user.email }}</span>
+                                    {% if profile.phone_number %}<span><i class="fas fa-phone me-1"></i>{{ profile.phone_number }}</span>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="mb-2">
+                            <span class="status-badge {% if application.status == 'new' %}status-pending{% elif application.status == 'hired' %}status-accepted{% elif application.status == 'rejected' %}status-rejected{% else %}status-pending{% endif %}">
+                                {{ application.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-md-end">
+                            <div class="d-flex flex-column align-items-end">
+                                <small class="text-white-50 mb-2">Update Status: ({{ application.status }})</small>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-success btn-sm" onclick="updateApplicationStatus('hired')">
+                                        <i class="fas fa-check me-1"></i>Hire
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="updateApplicationStatus('rejected')">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="updateApplicationStatus('screening')">
+                                        <i class="fas fa-search me-1"></i>Screen
+                                    </button>
+                                    <button class="btn btn-info btn-sm" onclick="updateApplicationStatus('interviewing')">
+                                        <i class="fas fa-comments me-1"></i>Interview
+                                    </button>
+                                    <button class="btn btn-primary btn-sm" onclick="updateApplicationStatus('offer')">
+                                        <i class="fas fa-handshake me-1"></i>Offer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
             </div>
         </div>
       </div>
 
-      <div class="backdrop-blur bg-white/60 border rounded-2xl card-shadow" style="border-color: #ffffff33;">
-        <div class="border-b p-2" style="border-color: var(--border);">
-          <nav class="flex space-x-2" aria-label="Tabs">
-            <a href="#" class="applicant-tab-button active-tab" data-target="tab-resume">Resume</a>
-            <a href="#" class="applicant-tab-button" data-target="tab-ai-analysis">AI Analysis</a>
-            <a href="#" class="applicant-tab-button" data-target="tab-notes">Internal Notes</a>
-          </nav>
+            <!-- Tab Navigation -->
+            <div class="company-content-section">
+                <div class="tab-navigation">
+                    <button class="tab-button active" onclick="showTab('resume')">
+                        <i class="fas fa-file-alt me-2"></i>Resume
+                    </button>
+                    <button class="tab-button" onclick="showTab('profile')">
+                        <i class="fas fa-user me-2"></i>Profile
+                    </button>
+                    <button class="tab-button" onclick="showTab('analysis')">
+                        <i class="fas fa-chart-line me-2"></i>AI Analysis
+                    </button>
+                    <button class="tab-button" onclick="showTab('notes')">
+                        <i class="fas fa-sticky-note me-2"></i>Notes
+                    </button>
         </div>
-        <div class="p-2 sm:p-4">
-          <div id="tab-resume" class="applicant-tab-content">
+
+                <!-- Resume Tab -->
+                <div id="resume-tab" class="tab-content active">
             {% if profile and profile.resume %}
-              <div class="text-center py-20">
-                <a href="{{ profile.resume.url }}" target="_blank" class="btn-primary-brand px-5 py-3 rounded-md text-lg font-semibold">
-                    <i class="fas fa-file-pdf mr-2"></i> View Resume
-                </a>
-                <p class="text-sm text-gray-500 mt-3">Click the button to open the resume in a new tab.</p>
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-pdf fa-3x text-muted mb-3"></i>
+                            <h5 class="mb-3">Resume Available</h5>
+                            <a href="{{ profile.resume.url }}" target="_blank" class="company-btn-primary">
+                                <i class="fas fa-download me-2"></i>Download Resume
+                            </a>
+                            <p class="text-muted mt-3">Click to open the resume in a new tab</p>
               </div>
             {% else %}
-              <div class="text-center py-20">
-                <p class="text-gray-600">No resume was uploaded with this application.</p>
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Resume Uploaded</h5>
+                            <p class="text-muted">This applicant did not upload a resume with their application.</p>
               </div>
             {% endif %}
           </div>
-          <div id="tab-ai-analysis" class="applicant-tab-content hidden p-4">
-            <h3 class="font-semibold mb-3 text-lg" style="color: var(--text-heading);">AI Profile Summary</h3>
-            <p class="text-sm text-gray-700 mb-6">"Based on the resume, this candidate shows strong experience in backend development with Python and Django. They appear to be a good fit for a mid-level role, but may lack specific experience in GraphQL as required by the job description."</p>
-            
-            <h3 class="font-semibold mb-3 text-lg" style="color: var(--text-heading);">Requirements Checklist</h3>
-            <ul class="space-y-2 text-sm">
-                <li class="flex items-center gap-2"><i class="fas fa-check-circle text-green-500"></i>5+ Years of Experience</li>
-                <li class="flex items-center gap-2"><i class="fas fa-check-circle text-green-500"></i>Proficiency in Python</li>
-                <li class="flex items-center gap-2"><i class="fas fa-check-circle text-green-500"></i>Experience with Django</li>
-                <li class="flex items-center gap-2"><i class="fas fa-times-circle text-red-500"></i>Experience with GraphQL</li>
-                <li class="flex items-center gap-2"><i class="fas fa-exclamation-circle text-yellow-500"></i>Experience with AWS (Mentioned briefly)</li>
-            </ul>
+
+                <!-- Profile Tab -->
+                <div id="profile-tab" class="tab-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Full Name</div>
+                                <div class="info-value">{{ application.user.get_full_name|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Email</div>
+                                <div class="info-value">{{ application.user.email }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Phone Number</div>
+                                <div class="info-value">{{ profile.phone_number|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Location</div>
+                                <div class="info-value">{{ profile.location|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Experience Level</div>
+                                <div class="info-value">{{ profile.experience_level|default:"Not specified" }}</div>
           </div>
-          <div id="tab-notes" class="applicant-tab-content hidden p-4">
-            <h3 class="font-semibold mb-3 text-lg" style="color: var(--text-heading);">Team Notes & Activity</h3>
-            <div class="space-y-4">
-                <textarea class="input w-full" rows="3" placeholder="Add a note for your team..."></textarea>
-                <div class="text-right">
-                    <button class="btn-primary-brand px-4 py-2 rounded-lg text-sm font-semibold">Save Note</button>
                 </div>
-                <div class="border-t pt-4 space-y-3" style="border-color: var(--border);">
-                    <div class="text-sm"><strong>You</strong> changed status to <strong>Screening</strong> <span class="text-gray-500">- 2 hours ago</span></div>
-                    <div class="text-sm"><strong>Priya</strong> left a note: "Looks promising, let's schedule a call." <span class="text-gray-500">- 1 day ago</span></div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Skills</div>
+                                <div class="info-value">{{ profile.skills|default:"Not specified" }}</div>
                 </div>
             </div>
+                    </div>
+                    
+                    {% if profile.bio %}
+                        <div class="info-card">
+                            <div class="info-label">Bio</div>
+                            <div class="info-value">{{ profile.bio }}</div>
+              </div>
+            {% endif %}
+          </div>
+
+                <!-- AI Analysis Tab -->
+                <div id="analysis-tab" class="tab-content">
+                    <!-- AI Match Score -->
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-robot me-2" style="color: #1e40af;"></i>AI Match Score
+                        </div>
+                        <div class="info-value">
+                            <div class="d-flex align-items-center">
+                                <div class="progress me-3" style="width: 200px; height: 20px; background: #e2e8f0;">
+                                    <div class="progress-bar {% if match_score >= 70 %}bg-success{% elif match_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                         role="progressbar" style="width: {{ match_score }}%" aria-valuenow="{{ match_score }}" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <span class="fw-bold {% if match_score >= 70 %}text-success{% elif match_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ match_score }}% Match
+                                </span>
           </div>
         </div>
       </div>
-    </main>
-
-    <aside class="lg:col-span-4">
-      <div class="lg:sticky top-24 space-y-6">
-         <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
-           <h3 class="font-semibold mb-3" style="color: var(--text-heading);">Applicant Status</h3>
-           <form method="post" class="space-y-2">
-             {% csrf_token %}
-             <select class="input w-full" name="status">
-               {% for value,label in status_choices %}
-                 <option value="{{ value }}" {% if application.status == value %}selected{% endif %}>{{ label }}</option>
+                    
+                    <!-- Skills Analysis -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">✅ Matching Skills</div>
+                                <div class="info-value">
+                                    {% if skills %}
+                                        {% for skill in skills|slice:":5" %}
+                                            <span class="badge bg-success me-1 mb-1">{{ skill }}</span>
+                                        {% endfor %}
+                                        {% if skills|length > 5 %}
+                                            <span class="text-muted">+{{ skills|length|add:"-5" }} more</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">No skills specified</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">❌ Missing Skills</div>
+                                <div class="info-value">
+                                    {% if missing_skills %}
+                                        {% for skill in missing_skills %}
+                                            <span class="badge bg-danger me-1 mb-1">{{ skill }}</span>
                {% endfor %}
-             </select>
-             <button type="submit" class="w-full btn-secondary-brand py-2.5 rounded-lg text-sm font-semibold">Update Status</button>
-           </form>
+                                    {% else %}
+                                        <span class="text-success">All required skills present!</span>
+                                    {% endif %}
          </div>
-        <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
-            <div class="text-sm text-gray-600 mb-1">AI Match Score</div>
-            <div class="text-4xl font-bold" style="color: var(--color-primary);">{{ match_score }}%</div>
-            <div class="mt-3 text-sm">
-                <p class="font-medium text-gray-800">Key Skills Match:</p>
-                <div class="mt-1 flex flex-wrap gap-1">
-                    <span class="pill pill-green">Python</span> <span class="pill pill-green">Django</span> <span class="pill pill-red">GraphQL</span>
                 </div>
             </div>
         </div>
-        <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
-            <h3 class="font-semibold mb-3" style="color: var(--text-heading);">Actions</h3>
-            <div class="space-y-2">
-                <a href="mailto:{{ application.user.email }}" class="w-full text-center btn-secondary-brand py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
-                    <i class="fas fa-envelope"></i> Contact Applicant
-                </a>
-                {% if profile and profile.resume %}
-                <a href="{{ profile.resume.url }}" target="_blank" class="w-full text-center btn-secondary-brand py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
-                    <i class="fas fa-download"></i> Download Resume
-                </a>
-                {% endif %}
-            </div>
-        </div>
+                    
+                    <!-- AI Recommendations -->
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-lightbulb me-2" style="color: #1e40af;"></i>AI Recommendations
+                        </div>
+                        <div class="info-value">
+                            {% if suggestions %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for suggestion in suggestions %}
+                                        <li class="mb-2">
+                                            <i class="fas fa-lightbulb text-primary me-2"></i>{{ suggestion }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-muted">No specific recommendations at this time.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- AI Summary -->
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-chart-line me-2" style="color: #1e40af;"></i>AI Analysis Summary
+                        </div>
+                        <div class="info-value">
+                            {% if match_score >= 70 %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Strong Match:</strong> This candidate shows excellent alignment with the job requirements. 
+                                    Consider moving to the interview stage.
+                                </div>
+                            {% elif match_score >= 50 %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Moderate Match:</strong> This candidate has some relevant skills but may need additional training 
+                                    in specific areas. Consider for screening.
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-times-circle me-2"></i>
+                                    <strong>Weak Match:</strong> This candidate may not be the best fit for this role. 
+                                    Consider other candidates or provide specific feedback.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
       </div>
-    </aside>
 
+                <!-- Notes Tab -->
+                <div id="notes-tab" class="tab-content">
+                    <div class="info-card">
+                        <div class="info-label">Internal Notes</div>
+                        <div class="info-value">
+                            <textarea class="form-control" rows="4" placeholder="Add your notes about this applicant..."></textarea>
+         </div>
+                </div>
   </div>
 </div>
 
-<style>
-  .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.04), 0 2px 4px -2px rgb(0 0 0 / 0.04); }
-  .link { color: var(--color-primary); text-decoration: none; font-weight: 500; }
-  .link:hover { text-decoration: underline; }
-  .pill { padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
-  .pill-green { background-color: #D1FAE5; color: #065F46; } /* green-100, green-800 */
-  .pill-red { background-color: #FEE2E2; color: #991B1B; } /* red-100, red-800 */
-  .applicant-tab-button {
-    padding: 8px 16px; border-radius: 6px; font-weight: 500;
-    color: #4B5563; transition: all 0.2s ease-in-out;
-  }
-  .applicant-tab-button:hover { background-color: rgba(255,255,255,0.5); }
-  .applicant-tab-button.active-tab {
-    background-color: #FFFFFF; color: var(--color-primary); font-weight: 600;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  }
-</style>
+             <!-- Action Buttons -->
+             <div class="company-content-section">
+                 <div class="d-flex justify-content-between align-items-center">
+                     <a href="{% url 'company_applicants' %}" class="company-btn-secondary">
+                         <i class="fas fa-arrow-left me-2"></i>Back to Applicants
+                     </a>
+                 </div>
+             </div>
+      </div>
+  </div>
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Tab functionality for Applicant Details
-  const tabButtons = document.querySelectorAll('.applicant-tab-button');
-  const tabContents = document.querySelectorAll('.applicant-tab-content');
-  tabButtons.forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      tabButtons.forEach(btn => btn.classList.remove('active-tab'));
-      button.classList.add('active-tab');
-      const targetId = button.getAttribute('data-target');
-      tabContents.forEach(content => {
-        content.classList.toggle('hidden', content.id !== targetId);
-      });
-    });
-  });
-});
+function showTab(tabName) {
+    // Hide all tabs
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    
+    // Remove active class from all buttons
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(button => button.classList.remove('active'));
+    
+    // Show selected tab
+    const targetTab = document.getElementById(tabName + '-tab');
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+}
+
+function updateApplicationStatus(status) {
+    if (confirm(`Are you sure you want to ${status} this application?`)) {
+        // Create a form to submit the status update
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "company_applicant_detail" application.id %}';
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Add status input
+        const statusInput = document.createElement('input');
+        statusInput.type = 'hidden';
+        statusInput.name = 'status';
+        statusInput.value = status;
+        form.appendChild(statusInput);
+        
+        // Submit form
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
+
+<!-- CSRF Token for JavaScript -->
+{% csrf_token %}
 {% endblock %}

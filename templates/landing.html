@@ -1,559 +1,534 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Find Jobs - JobVista{% endblock %}
+{% block title %}Find Your Dream Job - JobVista{% endblock %}
 
 {% block content %}
-    <div class="w-full px-6 lg:px-10 py-8">
         <!-- Hero Section -->
-        <div class="mb-10" style="background: linear-gradient(180deg, #F0F5FF 0%, #FFFFFF 100%); padding: 72px 0;">
-            <div class="text-center mb-8">
-                <h1 class="text-[48px] font-bold"
-                    style="color: var(--text-heading);">{{ hero_title|default:'Find Your Dream Job Today' }}</h1>
-                <p class="text-lg" style="color: var(--text-body);">Search through thousands of curated job listings
-                    from top-tier companies.</p>
-            </div>
-            <form method="GET" class="max-w-[800px] mx-auto">
-                <div class="flex flex-col md:flex-row gap-3 bg-white p-4 rounded-lg card-shadow border"
-                     style="border-color: var(--border);">
-                    <div class="flex-1">
-                        <div class="relative h-[52px]">
-                            <i class="fas fa-briefcase absolute left-4 top-1/2 -translate-y-1/2"
-                               style="color: var(--text-muted);"></i>
-                            <input type="text" name="search" value="{{ search_query }}"
-                                   placeholder="Job title, company, or keywords..."
-                                   class="w-full h-full pl-10 pr-4 rounded-md border focus:ring-2"
-                                   style="border-color: var(--border);"
-                                   onfocus="this.style.borderColor='var(--color-primary)';">
-                        </div>
-                    </div>
-                    <div class="md:w-64">
-                        <div class="relative h-[52px]">
-                            <i class="fas fa-location-dot absolute left-4 top-1/2 -translate-y-1/2"
-                               style="color: var(--text-muted);"></i>
-                            <input type="text" name="location" value="{{ selected_location }}" placeholder="Location..."
-                                   class="w-full h-full pl-10 pr-4 rounded-md border focus:ring-2"
-                                   style="border-color: var(--border);"
-                                   onfocus="this.style.borderColor='var(--color-primary)';">
-                        </div>
-                    </div>
-                    <button type="submit" class="h-[52px] px-6 rounded-md btn-primary-brand flex items-center gap-2"><i
-                            class="fas fa-search"></i> Search
-                    </button>
-                </div>
-            </form>
-            {% if trending_tags %}
-                <div class="mt-4 flex flex-wrap justify-center gap-2">
-                    {% for tag in trending_tags %}
-                        <a href="?search={{ tag|urlencode }}" class="px-3 py-1.5 rounded-md transition"
-                           style="background:#F3F4F6; color: var(--text-body);"
-                           onmouseover="this.style.background='#EBF0FF'; this.style.color='var(--color-primary)';"
-                           onmouseout="this.style.background='#F3F4F6'; this.style.color='var(--text-body)';">{{ tag }}</a>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
+<section class="position-relative overflow-hidden" style="background: var(--primary); min-height: 100vh;">
+    <!-- Background Pattern -->
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);"></div>
+    
+    <!-- Professional Illustrations - Proper Layout -->
+    <!-- Left side illustration -->
+    <div class="position-absolute" style="top: 10%; left: 5%; width: 250px; height: 250px; opacity: 0.2;">
+        <img src="{% static 'assets/illustrations/Social-media-marketing.svg' %}" alt="Career Growth" class="w-100 h-100" style="object-fit: contain; filter: brightness(1.2) saturate(0.8);">
+    </div>
+    
+    <!-- Right side illustration -->
+    <div class="position-absolute" style="top: 8%; right: 8%; width: 220px; height: 220px; opacity: 0.18;">
+        <img src="{% static 'assets/illustrations/Success.svg' %}" alt="Success" class="w-100 h-100" style="object-fit: contain; filter: brightness(1.2) saturate(0.8);">
+    </div>
+    
+    <!-- Bottom left illustration -->
+    <div class="position-absolute" style="bottom: 20%; left: 3%; width: 200px; height: 200px; opacity: 0.15;">
+        <img src="{% static 'assets/illustrations/Work-from-home.svg' %}" alt="Remote Work" class="w-100 h-100" style="object-fit: contain; filter: brightness(1.2) saturate(0.8);">
+    </div>
+    
+    <!-- Profile Images -->
+    <div class="position-absolute" style="top: 15%; left: 8%;">
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+             alt="Professional" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid white;">
+    </div>
+    
+    <!-- Icons -->
+    <div class="position-absolute" style="top: 25%; left: 15%;">
+        <i class="fas fa-globe" style="font-size: 2rem; color: var(--text-primary); opacity: 0.7;"></i>
+    </div>
+    <div class="position-absolute" style="top: 35%; right: 20%;">
+        <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--text-primary); opacity: 0.7;"></i>
+    </div>
+    <div class="position-absolute" style="bottom: 25%; left: 20%;">
+        <i class="fas fa-briefcase" style="font-size: 2rem; color: var(--text-primary); opacity: 0.7;"></i>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- Filters Sidebar -->
-            <div class="lg:col-span-3">
-                <div class="bg-white rounded-2xl shadow p-6 sticky top-24 border border-gray-100">
-                    <h3 class="text-lg font-semibold mb-4">Filter Jobs</h3>
-
-                    <form method="GET" id="filterForm">
-                        <input type="hidden" name="search" value="{{ search_query }}">
-
-                        <!-- Category Filter -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                            <select name="category"
-                                    class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    onchange="this.form.submit()">
-                                <option value="">All Categories</option>
-                                {% for category in categories %}
-                                    <option value="{{ category.slug }}"
-                                            {% if category.slug == selected_category %}selected{% endif %}>
-                                        {{ category.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <!-- Employment Type Filter -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Employment Type</label>
-                            <select name="employment_type"
-                                    class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    onchange="this.form.submit()">
-                                <option value="">All Types</option>
-                                {% for value, label in employment_types %}
-                                    <option value="{{ value }}"
-                                            {% if value == selected_employment_type %}selected{% endif %}>
-                                        {{ label }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <!-- Experience Level (multi-select) -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Experience Level</label>
-                            <div class="space-y-2 text-sm text-gray-700">
-                                {% for value, label in experience_filter_options %}
-                                    <label class="flex items-center gap-2">
-                                        <input type="checkbox" name="experience" value="{{ value }}" class="rounded"
-                                               {% if value in selected_experience_levels %}checked{% endif %}
-                                               onchange="document.getElementById('filterForm').submit()">
-                                        {{ label }}
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- Salary Range -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Salary Range (₹)</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="number" name="salary_min" value="{{ salary_min_value }}" placeholder="Min"
-                                       class="w-full px-3 py-2 border border-gray-200 rounded-lg"/>
-                                <input type="number" name="salary_max" value="{{ salary_max_value }}" placeholder="Max"
-                                       class="w-full px-3 py-2 border border-gray-200 rounded-lg"/>
-                            </div>
-                            <button type="submit"
-                                    class="mt-3 px-3 py-2 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">Apply
-                            </button>
-                        </div>
-
-                        <!-- Date Posted -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Date Posted</label>
-                            <div class="grid grid-cols-2 gap-2 text-sm text-gray-700">
-                                {% for days, label in date_posted_options %}
-                                    <label class="flex items-center gap-2">
-                                        <input type="radio" name="date_posted" value="{{ days }}" class="rounded"
-                                               {% if selected_date_posted == days %}checked{% endif %}
-                                               onchange="document.getElementById('filterForm').submit()">
-                                        {{ label }}
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- Remote Only -->
-                        <div class="mb-6">
-                            <label class="flex items-center gap-2 text-sm text-gray-700">
-                                <input type="checkbox" name="remote" value="1" class="rounded"
-                                       {% if selected_remote %}checked{% endif %}
-                                       onchange="document.getElementById('filterForm').submit()">
-                                Remote only
-                            </label>
-                        </div>
-
-                        <!-- Clear Filters -->
-                        <a href="{% url 'home' %}"
-                           class="block w-full text-center bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition">
-                            Clear All Filters
-                        </a>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Job Listings -->
-            <div class="lg:col-span-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-[24px] font-bold" style="color: var(--text-heading);">Showing {{ total_count }}
-                        Jobs</h2>
-                    <div class="flex items-center gap-2 text-sm">
-                        <label class="text-gray-600">Sort by:</label>
-                        <select name="sort" class="px-3 py-2 border rounded-md" style="border-color: var(--border);"
-                                onchange="location.href=this.options[this.selectedIndex].value;">
-                            <option value="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_employment_type %}employment_type={{ selected_employment_type }}&{% endif %}{% if selected_location %}location={{ selected_location|urlencode }}&{% endif %}sort=relevance"
-                                    {% if selected_sort == 'relevance' %}selected{% endif %}>Relevance
-                            </option>
-                            <option value="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_employment_type %}employment_type={{ selected_employment_type }}&{% endif %}{% if selected_location %}location={{ selected_location|urlencode }}&{% endif %}sort=date"
-                                    {% if selected_sort == 'date' %}selected{% endif %}>Newest
-                            </option>
-                            <option value="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_employment_type %}employment_type={{ selected_employment_type }}&{% endif %}{% if selected_location %}location={{ selected_location|urlencode }}&{% endif %}sort=salary_high"
-                                    {% if selected_sort == 'salary_high' %}selected{% endif %}>Salary: High to Low
-                            </option>
-                            <option value="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_employment_type %}employment_type={{ selected_employment_type }}&{% endif %}{% if selected_location %}location={{ selected_location|urlencode }}&{% endif %}sort=salary_low"
-                                    {% if selected_sort == 'salary_low' %}selected{% endif %}>Salary: Low to High
-                            </option>
-                        </select>
-                    </div>
-                </div>
-
-                {% if page_obj %}
-                    <div class="space-y-6">
-                        {% for job in page_obj %}
-                            <div class="bg-white rounded-md shadow-sm hover:shadow-md transition border border-gray-100 hover:-translate-y-0.5"
-                                 style="transition: box-shadow .2s ease, transform .2s ease;">
-                                <div class="p-5">
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-start justify-between">
-                                                <div class="flex-1">
-                                                    <h3 class="text-lg font-semibold text-gray-900 mb-1">
-                                                        <a href="{{ job.get_absolute_url }}"
-                                                           class="hover:text-blue-600 transition duration-300">
-                                                            {{ job.title }}
-                                                        </a>
-                                                    </h3>
-                                                    <div class="flex items-center text-gray-600 mb-2 gap-2">
-                                                        {% if job.company.logo %}
-                                                            <img src="{{ job.company.logo.url }}"
-                                                                 alt="{{ job.company.name }}"
-                                                                 class="w-12 h-12 rounded object-contain border border-gray-200 bg-white">
-                                                        {% else %}
-                                                            <i class="fas fa-building text-gray-400"></i>
-                                                        {% endif %}
-                                                        <span class="font-medium leading-none">{{ job.company.name }}</span>
-                                                        <button type="button" class="text-gray-400 hover:text-blue-600"
-                                                                title="Company insights"><i
-                                                                class="fas fa-chart-line"></i></button>
-                                                        {% if job.match_score %}
-                                                            <span class="ml-2 px-2 py-0.5 rounded text-xs"
-                                                                  style="background:#EFF2FF; color: var(--color-primary);">✨ {{ job.match_score }}% Match</span>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-2">
-                                                    <span class="flex items-center">
-                                                        <i class="fas fa-map-marker-alt mr-1"></i>
-                                                        {{ job.location }}
-                                                    </span>
-                                                        <span class="flex items-center">
-                                                        <i class="fas fa-clock mr-1"></i>
-                                                        {{ job.get_employment_type_display }}
-                                                    </span>
-                                                        {% if job.remote_available %}
-                                                            <span class="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs border border-green-100">
-                                                            Remote Available
-                                                        </span>
-                                                        {% endif %}
-                                                    </div>
-                                                    <p class="text-gray-600 mb-3 line-clamp-2 text-sm">
-                                                        {{ job.description|truncatewords:30 }}
-                                                    </p>
-                                                    <div class="flex flex-wrap gap-2">
-                                                    <span class="px-2.5 py-0.5 rounded text-xs border border-blue-100"
-                                                          style="background:#EFF2FF; color: var(--color-primary);">
-                                                        {{ job.category.name }}
-                                                    </span>
-                                                        <span class="bg-gray-50 text-gray-700 px-2.5 py-0.5 rounded text-xs border border-gray-100">
-                                                        {{ job.get_experience_level_display }}
-                                                    </span>
-                                                    </div>
-                                                </div>
-                                                {% if user.is_authenticated %}
-                                                    <button onclick="toggleBookmark('{{ job.id }}')"
-                                                            id="bookmark-btn-{{ job.id }}"
-                                                            class="ml-4 p-2 transition duration-300" title="Save job">
-                                                        <i class="fas fa-heart text-xl text-blue-400"></i>
-                                                    </button>
-                                                {% endif %}
-                                            </div>
+    <div class="container position-relative" style="z-index: 10;">
+        <div class="row align-items-center py-5">
+            <div class="col-lg-10 mx-auto text-center">
+                <h1 class="display-1 font-bold mb-4" style="color: var(--text-primary); line-height: 1.1;">
+                    Find Your <span style="color: var(--accent);">Dream Job</span> That Suit With <span style="color: var(--accent);">Exciting Opportunities</span>
+                </h1>
+                <p class="lead mb-5" style="color: var(--text-secondary); font-size: 1.25rem; max-width: 600px; margin: 0 auto;">
+                    Discover thousands of job opportunities from top companies. Find your perfect match with our AI-powered job search platform.
+                </p>
+                
+                <!-- Search Form -->
+                <div class="row justify-content-center mb-4">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-lg" style="background: white; border-radius: 15px;">
+                            <div class="card-body p-4">
+                                <form method="GET" class="row g-3">
+                                    <div class="col-md-8">
+                                        <div class="position-relative">
+                                            <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3" style="color: var(--text-muted);"></i>
+                                            <input type="text" class="form-control ps-5 py-3" name="search" 
+                                                   value="{{ search_query }}" placeholder="Job title, Salary, or Companies..." 
+                                                   style="border: none; font-size: 1.1rem;">
                                         </div>
                                     </div>
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-100">
-                                        <div class="flex items-center gap-2 mb-3 sm:mb-0">
-                                        <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-100">
-                                            {{ job.category.name }}
-                                        </span>
-                                            <span class="bg-gray-50 text-gray-700 px-3 py-1 rounded-full text-sm border border-gray-100">
-                                            {{ job.get_experience_level_display }}
-                                        </span>
+                                    <div class="col-md-4">
+                                        <button type="submit" class="btn w-100 py-3" style="background: var(--text-primary); color: white; border-radius: 10px; font-weight: 600;">
+                                            <i class="fas fa-search me-2"></i>Explore Now
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Popular Categories -->
+                <div class="d-flex justify-content-center gap-3 mb-5">
+                    <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 20px;">Product Manager</span>
+                    <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 20px;">Frontend Dev</span>
+                    <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 20px;">Data Analyst</span>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="row text-center">
+                    <div class="col-3">
+                        <div class="border-end" style="border-color: var(--text-muted) !important;">
+                            <h3 class="font-bold mb-1" style="color: var(--text-primary);">30000+</h3>
+                            <p class="text-muted mb-0">Live Jobs</p>
+                        </div>
+            </div>
+                    <div class="col-3">
+                        <div class="border-end" style="border-color: var(--text-muted) !important;">
+                            <h3 class="font-bold mb-1" style="color: var(--text-primary);">5000+</h3>
+                            <p class="text-muted mb-0">Daily Job Post</p>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="border-end" style="border-color: var(--text-muted) !important;">
+                            <h3 class="font-bold mb-1" style="color: var(--text-primary);">25000+</h3>
+                            <p class="text-muted mb-0">People Get Hired</p>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <h3 class="font-bold mb-1" style="color: var(--text-primary);">1000+</h3>
+                        <p class="text-muted mb-0">Companies</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trusted Companies Section -->
+<section class="py-5" style="background: var(--accent);">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h3 class="text-white font-bold">Trusted by the best companies</h3>
+        </div>
+        <div class="row align-items-center justify-content-center">
+            <div class="col-lg-2 col-md-4 col-6 mb-3">
+                <div class="text-center">
+                    <div class="bg-white rounded p-4 shadow-sm d-flex align-items-center justify-content-center" style="height: 80px;">
+                        <img src="/media/logos/apple-logo-png_seeklogo-272825.png" alt="Apple" class="img-fluid" style="max-height: 50px; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6 mb-3">
+                <div class="text-center">
+                    <div class="bg-white rounded p-4 shadow-sm d-flex align-items-center justify-content-center" style="height: 80px;">
+                        <img src="/media/logos/ATT-Emblem.png" alt="AT&T" class="img-fluid" style="max-height: 50px; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6 mb-3">
+                <div class="text-center">
+                    <div class="bg-white rounded p-4 shadow-sm d-flex align-items-center justify-content-center" style="height: 80px;">
+                        <img src="/media/logos/meta-icon-new-facebook-2021-logo-png_seeklogo-424014.png" alt="Meta" class="img-fluid" style="max-height: 50px; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6 mb-3">
+                <div class="text-center">
+                    <div class="bg-white rounded p-4 shadow-sm d-flex align-items-center justify-content-center" style="height: 80px;">
+                        <img src="/media/logos/mc-donalds-logo-png_seeklogo-298260.png" alt="McDonald's" class="img-fluid" style="max-height: 50px; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6 mb-3">
+                <div class="text-center">
+                    <div class="bg-white rounded p-4 shadow-sm d-flex align-items-center justify-content-center" style="height: 80px;">
+                        <img src="/media/logos/sony-logo-png_seeklogo-129420.png" alt="Sony" class="img-fluid" style="max-height: 50px; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+        </div>
+                        </div>
+</section>
+
+<!-- Latest Featured Jobs Section -->
+<section class="py-5" style="background: var(--bg-primary);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 font-bold mb-3" style="color: var(--text-primary);">
+                Latest Featured <span style="color: var(--accent);">Jobs</span>
+            </h2>
+            <p class="lead text-muted">Discover the latest job opportunities from top companies</p>
+                        </div>
+
+        <!-- Advanced Search -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <form method="GET" class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label font-medium">Job title, keyword or company name</label>
+                                <input type="text" class="form-control" name="search" 
+                                       value="{{ search_query }}" placeholder="e.g. Software Engineer">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label font-medium">City, state or zip code</label>
+                                <input type="text" class="form-control" name="location" 
+                                       value="{{ selected_location }}" placeholder="e.g. New York">
+                        </div>
+                            <div class="col-md-3">
+                                <label class="form-label font-medium">Category</label>
+                                <select class="form-control" name="category">
+                                    <option value="">All Categories</option>
+                                    {% for cat in categories %}
+                                        <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>
+                                            {{ cat.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label font-medium">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i>
+                            </button>
+                            </div>
+                        </form>
+                        </div>
+                        </div>
+                </div>
+            </div>
+
+        <!-- Filter Tags -->
+        <div class="text-center mb-4">
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <span class="badge" style="background: var(--gradient-primary); color: white;">UI/UX Design</span>
+                <span class="badge" style="background: var(--gradient-secondary); color: white;">Sales</span>
+                <span class="badge" style="background: var(--gradient-accent); color: white;">Development</span>
+                <span class="badge" style="background: var(--gradient-primary); color: white;">Marketing</span>
+                <span class="badge" style="background: var(--gradient-secondary); color: white;">Analytics</span>
+                    </div>
+                </div>
+
+        <!-- Job Listings -->
+                {% if page_obj %}
+            <div class="row">
+                        {% for job in page_obj %}
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100 border-0 shadow-md" style="border-radius: 15px;">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-start gap-3 mb-3">
+                                                        {% if job.company.logo %}
+                                        <img src="{{ job.company.logo.url }}" alt="{{ job.company.name }}" 
+                                             class="rounded" style="width: 3rem; height: 3rem; object-fit: cover;">
+                                                        {% else %}
+                                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 3rem; height: 3rem; background: var(--primary);">
+                                            <i class="fas fa-building text-white"></i>
+                                                    </div>
+                                                        {% endif %}
+                                    <div class="flex-grow-1">
+                                        <h5 class="font-bold mb-1" style="color: var(--text-primary);">{{ job.title }}</h5>
+                                        <p class="text-secondary mb-2" style="font-size: 0.9rem;">{{ job.company.name }}</p>
+                                        <div class="d-flex align-items-center gap-3 text-sm text-secondary">
+                                            <span><i class="fas fa-map-marker-alt me-1"></i>{{ job.location }}</span>
+                                            <span><i class="fas fa-clock me-1"></i>{{ job.employment_type }}</span>
                                         </div>
-                                        <div class="flex items-center gap-3">
-                                        
-                                        <span class="text-xs text-gray-500">
-                                            {{ job.created_at|timesince }} ago
-                                        </span>
-                                            <a href="{{ job.get_absolute_url }}"
-                                               class="bg-blue-600 text-white px-3.5 py-1.5 rounded-md hover:bg-blue-700 transition text-sm font-semibold shadow">
-                                                View Details
-                                            </a>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if job.match_score %}
+                                            <span class="badge" style="background: var(--accent); color: white; border-radius: 15px;">{{ job.match_score }}% Match</span>
+                                        {% endif %}
+                                        <i class="fas fa-bookmark" style="color: var(--text-muted); cursor: pointer;"></i>
+                                    </div>
                                         </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex gap-2">
+                                        {% if job.remote_available %}
+                                            <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 15px; font-size: 0.75rem;">Remote</span>
+                                        {% endif %}
+                                        <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 15px; font-size: 0.75rem;">{{ job.experience_level }}</span>
+                                        {% if job.salary_min %}
+                                            <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 15px; font-size: 0.75rem;">${{ job.salary_min|floatformat:0 }}+</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">30 minutes ago</small>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a href="{{ job.get_absolute_url }}" class="btn" style="background: var(--text-primary); color: white; border-radius: 10px; padding: 0.5rem 1.5rem;">
+                                        Apply Now
+                                    </a>
+                                    <i class="fas fa-arrow-right" style="color: var(--text-muted);"></i>
+                                </div>
                                     </div>
                                 </div>
                             </div>
                         {% endfor %}
+            </div>
+
+            <!-- View All Jobs Button -->
+            <div class="text-center mt-4">
+                <a href="#" class="btn" style="background: var(--text-primary); color: white; border-radius: 10px; padding: 0.75rem 2rem;">
+                    View All Jobs
+                </a>
                     </div>
 
                     <!-- Pagination -->
                     {% if page_obj.has_other_pages %}
-                        <div class="flex items-center justify-center mt-12">
-                            <nav class="flex items-center space-x-2">
+                <nav aria-label="Job pagination" class="mt-5">
+                    <ul class="pagination justify-content-center">
                                 {% if page_obj.has_previous %}
-                                    <a href="?page=
-
-
-                                            {{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_employment_type %}&employment_type={{ selected_employment_type }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}"
-                                       class="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition duration-300">
-                                        <i class="fas fa-chevron-left"></i>
-                                    </a>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Previous</a>
+                            </li>
                                 {% endif %}
 
-                                {% for num in page_obj.paginator.page_range %}
-                                    {% if page_obj.number == num %}
-                                        <span class="px-4 py-2 bg-blue-600 text-white rounded-md">{{ num }}</span>
-                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                        <a href="?page=
-
-
-                                                {{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_employment_type %}&employment_type={{ selected_employment_type }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}"
-                                           class="px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition duration-300">
-                                            {{ num }}
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
 
                                 {% if page_obj.has_next %}
-                                    <a href="?page=
-
-
-                                            {{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_employment_type %}&employment_type={{ selected_employment_type }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}"
-                                       class="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition duration-300">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </a>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Last</a>
+                            </li>
                                 {% endif %}
+                    </ul>
                             </nav>
-                        </div>
                     {% endif %}
                 {% else %}
-                    <div class="text-center py-12">
-                        <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">No jobs found</h3>
-                        <p class="text-gray-600 mb-4">Try adjusting your search criteria or filters.</p>
-                        <a href="{% url 'home' %}" class="text-blue-600 hover:text-blue-800">Clear all filters</a>
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="font-bold mb-3">No jobs found</h3>
+                <p class="text-muted mb-4">Try adjusting your search criteria or check back later.</p>
+                <a href="{% url 'find_jobs' %}" class="btn btn-primary">View All Jobs</a>
                     </div>
                 {% endif %}
             </div>
+</section>
 
-            <!-- Right Rail -->
-            <div class="lg:col-span-3">
-                <div class="space-y-6">
-                    <!-- Featured Companies -->
-                    <div class="bg-white rounded-2xl shadow p-6 border border-gray-100">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Featured Companies</h3>
+<!-- Choose Your Dream Companies Section -->
+<section class="py-5" style="background: var(--primary);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 font-bold mb-3" style="color: var(--text-primary);">
+                Choose Your Dream <span style="color: var(--accent);">Companies</span>
+            </h2>
+            <p class="lead text-muted">Explore opportunities from top companies worldwide</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 border-0 shadow-md" style="border-radius: 15px;">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <img src="/media/logos/apple-logo-png_seeklogo-272825.png" alt="Apple" class="rounded" style="width: 3rem; height: 3rem; object-fit: contain;">
                         </div>
-                        <div class="space-y-4">
-                            {% if featured_company_rows %}
-                                {% for item in featured_company_rows %}
-                                    {% with company=item.company %}
-                                        <div class="flex items-center gap-3">
-                                            {% if company.logo %}
-                                                <img src="{{ company.logo.url }}" alt="{{ company.name }}"
-                                                     class="w-10 h-10 rounded-lg object-contain border border-gray-200 bg-white">
-                                            {% else %}
-                                                <div class="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400">
-                                                    <i class="fas fa-building"></i>
+                        <h5 class="font-bold mb-2" style="color: var(--text-primary);">Apple</h5>
+                        <p class="text-secondary mb-3" style="font-size: 0.9rem;">45 Jobs Available</p>
+                        <p class="text-secondary mb-3" style="font-size: 0.85rem; line-height: 1.4;">Join the world's most innovative company and create products that change lives.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-1">
+                                <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 10px; font-size: 0.7rem;">Full Time</span>
+                                <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 10px; font-size: 0.7rem;">Remote</span>
                                                 </div>
-                                            {% endif %}
-                                            <div>
-                                                <p class="text-sm font-medium text-gray-900">{{ company.name }}</p>
-                                                <p class="text-xs text-gray-500">{{ item.open_jobs }} jobs open</p>
-                                            </div>
-                                        </div>
-                                    {% endwith %}
-                                {% endfor %}
-                            {% else %}
-                                <p class="text-sm text-gray-500">No featured companies yet.</p>
-                            {% endif %}
+                            <i class="fas fa-arrow-right" style="color: var(--text-muted);"></i>
+                        </div>
+                    </div>
                         </div>
                     </div>
 
-                    <!-- Trending Searches -->
-                    <div class="bg-white rounded-2xl shadow p-6 border border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Trending Searches</h3>
-                        <div class="flex flex-wrap gap-2">
-                            {% for tag in trending_tags %}
-                                <a href="?search={{ tag|urlencode }}"
-                                   class="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm">{{ tag }}</a>
-                            {% endfor %}
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 border-0 shadow-md" style="border-radius: 15px;">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <img src="/media/logos/ATT-Emblem.png" alt="AT&T" class="rounded" style="width: 3rem; height: 3rem; object-fit: contain;">
                         </div>
-                    </div>
-
-                    <!-- Job Alert CTA -->
-                    <div class="bg-white rounded-2xl shadow p-6 border border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Never Miss an Opportunity</h3>
-                        <p class="text-sm text-gray-600 mb-3">Get new jobs for this search sent to your inbox.</p>
-                        <form>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                <input type="email" placeholder="you@example.com"
-                                       style="flex: 1 1 200px; padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px;">
-                                <button type="button"
-                                        style="padding: 8px 16px; border-radius: 6px; background-color: #4A6CFD; color: white; font-size: 14px; font-weight: 600;">
-                                    Create Alert
-                                </button>
+                        <h5 class="font-bold mb-2" style="color: var(--text-primary);">AT&T</h5>
+                        <p class="text-secondary mb-3" style="font-size: 0.9rem;">32 Jobs Available</p>
+                        <p class="text-secondary mb-3" style="font-size: 0.85rem; line-height: 1.4;">Join a global telecommunications leader and shape the future of connectivity.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-1">
+                                <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 10px; font-size: 0.7rem;">Full Time</span>
+                                <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 10px; font-size: 0.7rem;">Remote</span>
                             </div>
-                        </form>
-                    </div>
-
-                    <!-- Tips -->
-                    <div class="bg-white rounded-2xl p-6 border"
-                         style="border-left: 3px solid #A8BCFF; border-color: var(--border);">
-                        <h3 class="text-lg font-semibold mb-2"><i class="fas fa-lightbulb text-yellow-400 mr-2"></i>Pro
-                            tip</h3>
-                        <p class="text-sm text-gray-600">Use filters to narrow down by category and employment type.
-                            Bookmark roles to review later.</p>
+                            <i class="fas fa-arrow-right" style="color: var(--text-muted);"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Browse by Category -->
-        <section class="mt-24 mb-12">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-bold text-gray-900">Browse by Category</h3>
-                <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:text-blue-800">View all</a>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                {% for category in categories|slice:':12' %}
-                    <a href="?category={{ category.slug }}"
-                       class="group bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-50 text-gray-500 mb-3">
-                            <i class="fas fa-layer-group"></i>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 border-0 shadow-md" style="border-radius: 15px;">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <img src="/media/logos/meta-icon-new-facebook-2021-logo-png_seeklogo-424014.png" alt="Meta" class="rounded" style="width: 3rem; height: 3rem; object-fit: contain;">
                         </div>
-                        <p class="text-sm font-medium text-gray-900 group-hover:text-blue-600 line-clamp-1">{{ category.name }}</p>
-                        <p class="text-xs text-gray-500">{{ category.jobs_count }} jobs available</p>
-                    </a>
-                {% empty %}
-                    <p class="col-span-full text-sm text-gray-500">No categories yet.</p>
-                {% endfor %}
+                        <h5 class="font-bold mb-2" style="color: var(--text-primary);">Meta</h5>
+                        <p class="text-secondary mb-3" style="font-size: 0.9rem;">28 Jobs Available</p>
+                        <p class="text-secondary mb-3" style="font-size: 0.85rem; line-height: 1.4;">Be part of the digital revolution with Meta's innovative team.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-1">
+                                <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 10px; font-size: 0.7rem;">Full Time</span>
+                                <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 10px; font-size: 0.7rem;">Remote</span>
+                            </div>
+                            <i class="fas fa-arrow-right" style="color: var(--text-muted);"></i>
             </div>
-        </section>
-
-        <!-- Why JobVista -->
-        <section class="mt-24 bg-white border border-gray-100 rounded-2xl p-8">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">Why JobVista?</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i
-                            class="fas fa-check"></i></div>
-                    <div>
-                        <p class="font-medium text-gray-900">Verified listings</p>
-                        <p class="text-sm text-gray-600">All jobs are reviewed to reduce spam and duplicates.</p>
                     </div>
                 </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i
-                            class="fas fa-building"></i></div>
-                    <div>
-                        <p class="font-medium text-gray-900">Top companies</p>
-                        <p class="text-sm text-gray-600">Discover roles from reputable organizations.</p>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 border-0 shadow-md" style="border-radius: 15px;">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <img src="/media/logos/mc-donalds-logo-png_seeklogo-298260.png" alt="McDonald's" class="rounded" style="width: 3rem; height: 3rem; object-fit: contain;">
+                        </div>
+                        <h5 class="font-bold mb-2" style="color: var(--text-primary);">McDonald's</h5>
+                        <p class="text-secondary mb-3" style="font-size: 0.9rem;">54 Jobs Available</p>
+                        <p class="text-secondary mb-3" style="font-size: 0.85rem; line-height: 1.4;">Join the world's leading restaurant chain and grow your career.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-1">
+                                <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 10px; font-size: 0.7rem;">Full Time</span>
+                                <span class="badge" style="background: var(--bg-tertiary); color: var(--text-primary); border-radius: 10px; font-size: 0.7rem;">Remote</span>
+                            </div>
+                            <i class="fas fa-arrow-right" style="color: var(--text-muted);"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i
-                            class="fas fa-bolt"></i></div>
-                    <div>
-                        <p class="font-medium text-gray-900">Fast apply</p>
-                        <p class="text-sm text-gray-600">Bookmark and apply quickly with a streamlined flow.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Testimonials -->
-        <section class="mt-24">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">What candidates say</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                    <div class="flex items-start gap-3">
-                        <img src="https://i.pravatar.cc/40?img=1" alt="Priya" class="w-10 h-10 rounded-full">
-                        <div>
-                            <p class="text-gray-700">“Found my dream role within a week. Filters made it super
-                                easy.”</p>
-                            <p class="mt-2 text-sm text-gray-500">— Priya, Frontend Engineer</p>
+<!-- Testimonials Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 font-bold mb-3">Success Stories</h2>
+            <p class="lead text-muted">Hear from professionals who found their dream jobs</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                                 alt="Sarah Johnson" class="rounded-circle mx-auto mb-3" style="width: 4rem; height: 4rem; object-fit: cover;">
+                            <h5 class="font-bold mb-1" style="color: var(--text-primary);">Sarah Johnson</h5>
+                            <p class="text-secondary text-sm">Product Manager at Google</p>
+                        </div>
+                        <div class="text-center mb-4">
+                            <i class="fas fa-quote-left text-accent" style="font-size: 2rem; opacity: 0.3;"></i>
+                        </div>
+                        <p class="text-secondary mb-4 text-center" style="line-height: 1.6; font-style: italic;">"JobVista helped me find my dream role in just 2 weeks! The AI matching was incredibly accurate."</p>
+                        <div class="d-flex justify-content-center text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
                         </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                    <div class="flex items-start gap-3">
-                        <img src="https://i.pravatar.cc/40?img=2" alt="Arjun" class="w-10 h-10 rounded-full">
-                        <div>
-                            <p class="text-gray-700">“Clean, fast, and relevant jobs. The best job board experience I’ve
-                                had.”</p>
-                            <p class="mt-2 text-sm text-gray-500">— Arjun, Data Analyst</p>
+            </div>
+            
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                                 alt="Michael Chen" class="rounded-circle mx-auto mb-3" style="width: 4rem; height: 4rem; object-fit: cover;">
+                            <h5 class="font-bold mb-1" style="color: var(--text-primary);">Michael Chen</h5>
+                            <p class="text-secondary text-sm">Software Engineer at Microsoft</p>
+                        </div>
+                        <div class="text-center mb-4">
+                            <i class="fas fa-quote-left text-accent" style="font-size: 2rem; opacity: 0.3;"></i>
+                        </div>
+                        <p class="text-secondary mb-4 text-center" style="line-height: 1.6; font-style: italic;">"The platform's smart recommendations led me to opportunities I never would have found otherwise."</p>
+                        <div class="d-flex justify-content-center text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
                         </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                    <div class="flex items-start gap-3">
-                        <img src="https://i.pravatar.cc/40?img=3" alt="Neha" class="w-10 h-10 rounded-full">
-                        <div>
-                            <p class="text-gray-700">“Loved the bookmarks and company previews. Highly recommended.”</p>
-                            <p class="mt-2 text-sm text-gray-500">— Neha, Product Manager</p>
+            </div>
+            
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                                 alt="Emily Rodriguez" class="rounded-circle mx-auto mb-3" style="width: 4rem; height: 4rem; object-fit: cover;">
+                            <h5 class="font-bold mb-1" style="color: var(--text-primary);">Emily Rodriguez</h5>
+                            <p class="text-secondary text-sm">UX Designer at Airbnb</p>
+                        </div>
+                        <div class="text-center mb-4">
+                            <i class="fas fa-quote-left text-accent" style="font-size: 2rem; opacity: 0.3;"></i>
+                        </div>
+                        <p class="text-secondary mb-4 text-center" style="line-height: 1.6; font-style: italic;">"The career advice section was a game-changer for my job search strategy. Highly recommended!"</p>
+                        <div class="d-flex justify-content-center text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Employer CTA -->
-        <section class="mt-16">
-            <div class="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h3 class="text-2xl font-extrabold">Hiring? Find great talent on JobVista</h3>
-                    <p class="text-white/90">Post your job and reach thousands of qualified candidates.</p>
+<!-- Newsletter Section -->
+<section class="py-5" style="background: var(--gradient-hero);">
+    <div class="container">
+        <div class="row justify-content-center text-center text-white">
+            <div class="col-lg-8">
+                <h2 class="display-4 font-bold mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Ready to Find Your Dream Job?</h2>
+                <p class="lead mb-5" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.3); font-size: 1.25rem;">Join thousands of professionals who have already found their perfect match.</p>
+                
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-xl" style="backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.95);">
+                            <div class="card-body p-4">
+                                <div class="input-group">
+                                    <input type="email" class="form-control py-3" placeholder="Enter your email address">
+                                    <button class="btn btn-primary py-3 px-4" type="button">
+                                        <i class="fas fa-arrow-right me-2"></i>Get Started
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <a href="{% url 'create_job' %}"
-                   class="inline-flex items-center bg-white text-blue-700 px-5 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">Post
-                    a Job</a>
             </div>
-        </section>
-
+        </div>
     </div>
-
-    <!-- ✅ JavaScript for Toggle Bookmark with CSRF Token -->
-    <script>
-        // Get CSRF token from cookie
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        const csrftoken = getCookie('csrftoken');
-
-        // Attach event listeners to all bookmark buttons
-        document.querySelectorAll('[id^="bookmark-btn-"]').forEach(btn => {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                const jobId = btn.id.replace('bookmark-btn-', '');
-                toggleBookmark(jobId);
-            });
-        });
-
-        function toggleBookmark(jobId) {
-            fetch(`/bookmarks/bookmark/${jobId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json',
-                },
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const btn = document.getElementById(`bookmark-btn-${jobId}`);
-                    const icon = btn.querySelector('i');
-                    if (data.bookmarked) {
-                        icon.className = 'fas fa-heart text-xl text-red-500';
-                    } else {
-                        icon.className = 'fas fa-heart text-xl text-blue-400';
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
-    </script>
+</section>
 {% endblock %}

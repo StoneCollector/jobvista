@@ -1,26 +1,41 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Apply for {{ job.title }} - JobVista{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <div class="bg-white rounded-lg shadow-lg p-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Apply for {{ job.title }}</h1>
-        <p class="text-gray-600 mb-6">at {{ job.company.name }} • {{ job.location }}</p>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <img src="{% static 'assets/logo/logo.png' %}" alt="JobVista" class="mb-3" style="height: 2.5rem; width: auto;">
+                        <h1 class="font-bold mb-2" style="color: var(--text-primary);">Apply for {{ job.title }}</h1>
+                        <p class="text-muted">at {{ job.company.name }} • {{ job.location }}</p>
+                    </div>
 
-        <form method="POST">
-            {% csrf_token %}
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p class="text-blue-800">
-                    You are about to apply using your account. We will notify the company of your interest.
-                </p>
-            </div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="alert alert-info border-0 mb-4" style="background: var(--bg-tertiary); border-radius: 15px;">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-3" style="color: var(--accent);"></i>
+                                <p class="mb-0" style="color: var(--text-primary);">
+                                    You are about to apply using your account. We will notify the company of your interest.
+                                </p>
+                            </div>
+                        </div>
 
-            <div class="flex items-center gap-3">
-                <a href="{{ job.get_absolute_url }}" class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</a>
-                <button type="submit" class="px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Submit Application</button>
+                        <div class="text-center">
+                            <a href="{{ job.get_absolute_url }}" class="btn btn-outline me-3">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Application
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

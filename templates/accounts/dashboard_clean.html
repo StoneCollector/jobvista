@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - JobVista{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h1 class="display-5 font-bold mb-3">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+            <p class="lead text-muted">Here's your job search overview</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-briefcase text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h3 class="font-bold">{{ recent_jobs|length }}</h3>
+                    <p class="text-muted">New Jobs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-paper-plane text-success mb-3" style="font-size: 2rem;"></i>
+                    <h3 class="font-bold">{{ stats.applications }}</h3>
+                    <p class="text-muted">Applications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-bookmark text-warning mb-3" style="font-size: 2rem;"></i>
+                    <h3 class="font-bold">{{ saved|length }}</h3>
+                    <p class="text-muted">Bookmarks</p>
+                </div>
+            </div>
+        </div>
+       
+
+    <div class="row">
+        <!-- Recent Jobs -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="font-bold mb-0">Recent Job Opportunities</h5>
+                    <a href="{% url 'find_jobs' %}" class="btn btn-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_jobs %}
+                        <div class="row">
+                            {% for job in recent_jobs %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="font-bold mb-2">
+                                                <a href="{{ job.get_absolute_url }}" class="text-decoration-none">
+                                                    {{ job.title }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted text-sm mb-2">{{ job.company.name }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-secondary">{{ job.location }}</span>
+                                                {% if job.match_score %}
+                                                    <span class="badge bg-success">{{ job.match_score }}% Match</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-briefcase text-muted mb-3" style="font-size: 3rem;"></i>
+                            <p class="text-muted">No recent jobs found</p>
+                            <a href="{% url 'find_jobs' %}" class="btn btn-primary">Browse Jobs</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Profile Strength -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="font-bold mb-0">Profile Strength</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ profile_strength }}%"></div>
+                    </div>
+                    <p class="text-muted text-sm mb-3">{{ profile_strength }}% Complete</p>
+                    <a href="{% url 'profile_view' %}" class="btn btn-primary btn-sm">Complete Profile</a>
+                </div>
+            </div>
+
+            <!-- Saved Jobs -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="font-bold mb-0">Saved Jobs</h5>
+                </div>
+                <div class="card-body">
+                    {% if saved %}
+                        {% for bookmark in saved|slice:":3" %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="font-medium mb-0">{{ bookmark.job.title }}</h6>
+                                    <p class="text-muted text-sm">{{ bookmark.job.company.name }}</p>
+                                </div>
+                                <a href="{{ bookmark.job.get_absolute_url }}" class="btn btn-primary btn-sm">View</a>
+                            </div>
+                            {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'user_bookmarks' %}" class="btn btn-secondary btn-sm">View All</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-bookmark text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted text-sm">No saved jobs yet</p>
+                            <a href="{% url 'home' %}" class="btn btn-primary btn-sm">Browse Jobs</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="font-bold mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'find_jobs' %}" class="btn btn-primary">Search Jobs</a>
+                        <a href="{% url 'profile_view' %}" class="btn btn-secondary">Update Profile</a>
+                        <a href="{% url 'user_bookmarks' %}" class="btn btn-secondary">View Bookmarks</a>
+                        <a href="{% url 'job_alerts' %}" class="btn btn-secondary">Job Alerts</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

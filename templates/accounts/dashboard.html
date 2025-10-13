@@ -1,220 +1,812 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard - JobVista{% endblock %}
 
 {% block content %}
-<div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
-  <div class="mb-8">
-    <h1 class="text-2xl font-bold" style="color: var(--text-heading);">Welcome back, {{ user.first_name|default:user.username }}</h1>
-    <p class="text-sm" style="color: var(--text-body);">You have <a href="{% url 'home' %}" class="font-semibold" style="color: var(--color-primary);">{{ recent_jobs|length }} new high‑match jobs</a> this week.</p>
+<style>
+    .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+        background: #f8fafc;
+    }
+    
+    .sidebar {
+        width: 280px;
+        background: white;
+        box-shadow: 0 0 20px rgba(0,0,0,0.08);
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 1000;
+        border-right: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar.collapsed {
+        width: 80px;
+    }
+    
+    .sidebar.collapsed .sidebar-header h5,
+    .sidebar.collapsed .sidebar-header p,
+    .sidebar.collapsed .sidebar-header h6,
+    .sidebar.collapsed .nav-link span {
+        display: none;
+    }
+    
+    .sidebar.collapsed .nav-link {
+        justify-content: center;
+        padding: 0.875rem 1rem;
+    }
+    
+    .sidebar.collapsed .sidebar-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .sidebar.collapsed .sidebar-header .d-flex {
+        justify-content: center;
+    }
+    
+    .sidebar.collapsed .sidebar-header .d-flex > div:not(.rounded-circle) {
+        display: none;
+    }
+    
+    #sidebarToggle:hover {
+        background: #d97706 !important;
+        transform: scale(1.05);
+    }
+    
+    #sidebarToggle:active {
+        transform: scale(0.95);
+    }
+    
+    .main-content {
+        flex: 1;
+        margin-left: 280px;
+        padding: 0;
+        background: #f8fafc;
+        min-height: 100vh;
+        transition: all 0.3s ease;
+    }
+    
+    .main-content.expanded {
+        margin-left: 80px;
+    }
+    
+    .dashboard-wrapper {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .dashboard-header {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .section-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+    
+    .sidebar-header {
+        padding: 2rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        background: white;
+    }
+    
+    .sidebar-nav {
+        padding: 1rem 0;
+    }
+    
+    .nav-item {
+        margin: 0.125rem 0;
+    }
+    
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.875rem 1.5rem;
+        color: #64748b;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+        font-weight: 500;
+    }
+    
+    .nav-link:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    
+    .nav-link.active {
+        background: #fef3c7;
+        color: #d97706;
+        border-left-color: #f59e0b;
+        position: relative;
+    }
+    
+    .nav-link.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 20px;
+        background: #f59e0b;
+        border-radius: 0 2px 2px 0;
+    }
+    
+    .nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .stat-card {
+        background: #FFFBEB;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #fef3c7;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: #f59e0b;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1e293b;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+    
+    .profile-complete-card {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 2px solid #f59e0b;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-complete-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(245, 158, 11, 0.1);
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
+    
+    .stat-illustration {
+        width: 40px;
+        height: 40px;
+        opacity: 0.6;
+        filter: grayscale(100%);
+        transition: all 0.2s ease;
+    }
+    
+    .stat-card:hover .stat-illustration {
+        opacity: 0.8;
+        filter: grayscale(0%);
+    }
+    
+    .content-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .section-subtitle {
+        font-size: 1rem;
+        color: #64748b;
+        margin-bottom: 2rem;
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .job-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .job-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+        border-color: #f59e0b;
+    }
+    
+    .quick-action-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: #64748b;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        margin-bottom: 0.5rem;
+    }
+    
+    .quick-action-link:hover {
+        background: #f8fafc;
+        color: #1e293b;
+        text-decoration: none;
+    }
+    
+    .quick-action-link i {
+        margin-right: 0.75rem;
+        width: 16px;
+        text-align: center;
+    }
+    
+    .saved-job-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .saved-job-item:hover {
+        background: #f1f5f9;
+        transform: translateX(2px);
+    }
+    
+    .saved-job-content {
+        flex: 1;
+    }
+    
+    .saved-job-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+    
+    .saved-job-company {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+    
+    .btn-outline-primary {
+        border: 1px solid #f59e0b;
+        color: #f59e0b;
+        background: transparent;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #f59e0b;
+        color: white;
+        border-color: #f59e0b;
+    }
+    
+    .illustration-bg {
+        position: absolute;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    
+    .job-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .company-name {
+        font-size: 0.9rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+    
+    .job-location {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+    }
+    
+    .job-tag {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .company-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .company-logo-placeholder {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .quick-action-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: #64748b;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        margin-bottom: 0.5rem;
+    }
+    
+    .quick-action-link:hover {
+        background: #f8fafc;
+        color: #1e293b;
+        text-decoration: none;
+    }
+    
+    .quick-action-link i {
+        margin-right: 0.75rem;
+        width: 16px;
+        text-align: center;
+    }
+    
+    .saved-job-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .saved-job-item:hover {
+        background: #f1f5f9;
+        transform: translateX(2px);
+    }
+    
+    .saved-job-content {
+        flex: 1;
+    }
+    
+    .saved-job-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+    
+    .saved-job-company {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+    
+    .btn-outline-primary {
+        border: 1px solid #f59e0b;
+        color: #f59e0b;
+        background: transparent;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #f59e0b;
+        color: white;
+        border-color: #f59e0b;
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 100%;
+            position: relative;
+            height: auto;
+        }
+        
+        .main-content {
+            margin-left: 0;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+           
+            
+            <div class="d-flex align-items-center">
+                <div id="sidebarToggle" class="rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                     style="width: 40px; height: 40px; background: #f59e0b; color: white; cursor: pointer; transition: all 0.3s ease;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 font-semibold" style="color: #1e293b;">{{ user.first_name|default:user.username }}</h6>
+                    <p class="mb-0 text-sm" style="color: #64748b;">Welcome back</p>
+                </div>
+            </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-    <aside class="lg:col-span-3 hidden lg:block space-y-6">
-      <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px; width:100%">
-        <div class="flex items-center gap-3">
-          <div class="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-gray-500"><i class="fas fa-user"></i></div>
-          <div>
-            <p class="text-base font-semibold" style="color: var(--text-heading);">{{ user.first_name|default:user.username }}</p>
-            <p class="text-xs text-gray-500">Profile {{ profile_strength }}% complete</p>
-          </div>
-        </div>
-        <a href="{% url 'profile_edit' %}" class="mt-4 inline-block w-full text-center px-3 py-2 rounded-md btn-secondary-brand text-sm">View & Edit Profile</a>
-      </div>
-      <nav class="backdrop-blur bg-white/60 border rounded-2xl p-2 card-shadow" style="border-color: #ffffff33; border-width:1px;">
-        <a href="{% url 'dashboard' %}" class="flex items-center gap-2 px-3 py-2 rounded bg-white/80 font-semibold"><i class="fas fa-home"></i><span class="text-sm">My home</span></a>
-        <a href="{% url 'home' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/80"><i class="fas fa-briefcase"></i><span class="text-sm">Jobs</span></a>
-        <a href="{% url 'user_bookmarks' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/80"><i class="fas fa-bookmark"></i><span class="text-sm">Bookmarks</span></a>
-      </nav>
-    </aside>
-
-    <main class="lg:col-span-9 space-y-6">
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
-          <h3 class="text-base font-semibold mb-3" style="color: var(--text-heading);">Activity Snapshot</h3>
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div class="flex items-center gap-2"><i class="fas fa-briefcase text-gray-400"></i><div><p class="text-2xl font-bold">{{ stats.applications }}</p><p class="text-gray-500">Applications</p></div></div>
-            <div class="flex items-center gap-2"><i class="fas fa-eye text-gray-400"></i><div><p class="text-2xl font-bold">{{ stats.viewed_by_recruiter }}</p><p class="text-gray-500">Viewed by Recruiter</p></div></div>
-            <div class="flex items-center gap-2"><i class="fas fa-user text-gray-400"></i><div><p class="text-2xl font-bold">{{ stats.profile_views }}</p><p class="text-gray-500">Profile Views</p></div></div>
-            <div class="flex items-center gap-2"><i class="fas fa-comments text-gray-400"></i><div><p class="text-2xl font-bold">{{ stats.interviews }}</p><p class="text-gray-500">Active Interviews</p></div></div>
-          </div>
-        </div>
-        <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
-          <h3 class="text-base font-semibold mb-3" style="color: var(--text-heading);">Profile Strength</h3>
-          <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden"><div class="h-2.5 rounded-full" style="background-color: var(--color-primary); width: {{ profile_strength }}%"></div></div>
-          <p class="mt-2 text-sm text-gray-600">{{ profile_strength }}% complete</p>
-          <p class="text-xs text-gray-500">{{ next_hint }}</p>
-          <a href="{% url 'profile_edit' %}" class="mt-3 inline-block px-3 py-1.5 rounded-md btn-secondary-brand text-sm">Improve Profile</a>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-10 gap-6">
-
-        <div class="lg:col-span-6 space-y-6">
-          <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-lg font-semibold" style="color: var(--text-heading);">Your AI Job Feed</h2>
-              <a href="{% url 'home' %}" class="text-sm" style="color: var(--color-primary);">See all</a>
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
             </div>
+            <div class="nav-item">
+                <a href="{% url 'find_jobs' %}" class="nav-link">
+                    <i class="fas fa-search"></i>
+                    <span>Find Jobs</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'user_bookmarks' %}" class="nav-link">
+                    <i class="fas fa-bookmark"></i>
+                    <span>My Bookmarks</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'my_applications' %}" class="nav-link">
+                    <i class="fas fa-file-alt"></i>
+                    <span>My Applications</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'profile_view' %}" class="nav-link">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'job_alerts' %}" class="nav-link">
+                    <i class="fas fa-bell"></i>
+                    <span>Job Alerts</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'career_advice' %}" class="nav-link">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Career Advice</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'logout' %}" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-wrapper">
+                <!-- Welcome Header -->
+                <div class="dashboard-header">
+                    <div class="d-flex justify-content-between align-items-center">
+          <div>
+                            <h1 class="section-title">Dashboard Overview</h1>
+                            <p class="section-subtitle">Here's your job search activity and opportunities</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'find_jobs' %}" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Find Jobs
+                            </a>
+                            <a href="{% url 'profile_view' %}" class="btn btn-outline">
+                                <i class="fas fa-user me-2"></i>Profile
+                            </a>
+          </div>
+        </div>
+      </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <img src="{% static 'assets/illustrations/Success.svg' %}" alt="Jobs" class="stat-illustration">
+                        </div>
+                        <div>
+                            <div class="stat-number">{{ recent_jobs|length }}</div>
+                            <div class="stat-label">New Jobs</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <img src="{% static 'assets/illustrations/Launch.svg' %}" alt="Applications" class="stat-illustration">
+                        </div>
+                        <div>
+                            <div class="stat-number">{{ stats.applications }}</div>
+                            <div class="stat-label">Applications</div>
+                        </div>
+          </div>
+        </div>
+                
+                <div class="stat-card">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <img src="{% static 'assets/illustrations/Project-planning.svg' %}" alt="Bookmarks" class="stat-illustration">
+                        </div>
+                        <div>
+                            <div class="stat-number">{{ saved|length }}</div>
+                            <div class="stat-label">Bookmarks</div>
+                        </div>
+        </div>
+      </div>
+
+                
+            </div>
+
+                <!-- Main Content Grid -->
+                <div class="content-grid">
+
+                    <!-- Recent Jobs Section -->
+                    <div class="content-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h4 class="section-title">Recent Job Opportunities</h4>
+                                <p class="section-subtitle">Discover new opportunities that match your profile</p>
+                            </div>
+                            <a href="{% url 'find_jobs' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i>View All
+                            </a>
+            </div>
+                        
             {% if recent_jobs %}
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            <div class="row">
               {% for job in recent_jobs %}
-              <div class="group border rounded-xl p-4 bg-white/60 hover:bg-white/80 transition card-shadow" style="border-color: #ffffff33;">
-                <div class="flex items-start justify-between">
-                  <div class="flex items-center gap-3">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="job-card">
+                                            <div class="d-flex align-items-start gap-3 mb-3">
                     {% if job.company.logo %}
-                    <img src="{{ job.company.logo.url }}" class="w-10 h-10 rounded object-contain border" style="border-color: var(--border);" alt="{{ job.company.name }}"/>
+                                                    <img src="{{ job.company.logo.url }}" alt="{{ job.company.name }}" class="company-logo">
                     {% else %}
-                    <div class="w-10 h-10 rounded border flex items-center justify-center text-gray-400" style="border-color: var(--border);"><i class="fas fa-building"></i></div>
+                                                    <div class="company-logo-placeholder">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div class="flex-grow-1">
+                                                    <h6 class="job-title">{{ job.title }}</h6>
+                                                    <p class="company-name">{{ job.company.name }}</p>
+                                                    <div class="job-location">
+                                                        <i class="fas fa-map-marker-alt me-1"></i>{{ job.location }}
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2 mt-2">
+                                                        <span class="job-tag">{{ job.get_employment_type_display }}</span>
+                                                        {% if job.remote_available %}
+                                                            <span class="job-tag" style="background: #dcfce7; color: #166534;">Remote</span>
                     {% endif %}
-                    <div>
-                      <p class="text-sm font-semibold group-hover:text-blue-600" style="color: var(--text-heading);">{{ job.title }}</p>
-                      <p class="text-xs text-gray-500">{{ job.company.name }} • {{ job.location }}</p>
                     </div>
                   </div>
                   {% if job.match_score %}
-                  <span class="px-2 py-0.5 rounded text-xs whitespace-nowrap" style="background:#EFF2FF; color: var(--color-primary);">✨ {{ job.match_score }}% Match</span>
+                                                    <span class="badge" style="background: #f59e0b; color: white; border-radius: 12px;">{{ job.match_score }}%</span>
                   {% endif %}
                 </div>
-                <div class="mt-3 flex items-center gap-2 text-xs">
-                  {% if job.salary_min or job.salary_max %}
-                  <span class="px-2 py-0.5 bg-green-50 border rounded text-green-600" style="border-color: #CFF7E6;">₹{% if job.salary_min %}{{ job.salary_min|floatformat:0 }}{% endif %}{% if job.salary_max %}–{{ job.salary_max|floatformat:0 }}{% endif %}</span>
-                  {% endif %}
-                  {% for s in job.top_skills %}
-                  <span class="px-2 py-0.5 bg-gray-50 border rounded" style="border-color: var(--border);">{{ s }}</span>
-                  {% endfor %}
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge" style="background: #f1f5f9; color: #64748b; border-radius: 12px;">{{ job.employment_type }}</span>
+                                                <a href="{{ job.get_absolute_url }}" class="btn btn-primary btn-sm" style="border-radius: 8px;">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                            </div>
                 </div>
               </div>
               {% endfor %}
             </div>
             {% else %}
-              <p class="text-sm text-gray-600">No recommendations yet. Start by searching and bookmarking jobs.</p>
+                            <div class="text-center py-5">
+                                <div class="mb-4">
+                                    <i class="fas fa-briefcase text-muted" style="font-size: 4rem;"></i>
+                                </div>
+                                <h4 class="font-bold mb-3">No recent jobs found</h4>
+                                <p class="text-muted mb-4">Start exploring available opportunities</p>
+                                <a href="{% url 'find_jobs' %}" class="btn btn-primary">Browse Jobs</a>
+                            </div>
             {% endif %}
           </div>
-          <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
-            <h3 class="text-base font-semibold mb-2" style="color: var(--text-heading);">Skills Hub</h3>
-            {% if suggested_skill %}
-              <p class="text-sm text-gray-700">Top jobs you're viewing require <span class="font-semibold">{{ suggested_skill }}</span>. Consider adding it to your skillset.</p>
-            {% else %}
-              <p class="text-sm text-gray-600">We’ll suggest in-demand skills as you interact with jobs.</p>
-            {% endif %}
+
+                    <!-- Sidebar Content -->
+                    <div>
+                        <!-- Profile Strength Section -->
+                        <div class="content-section">
+                            <h5 class="font-bold mb-3" style="color: #1e293b;">Profile Strength</h5>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-sm font-medium" style="color: #64748b;">Completion</span>
+                                    <span class="text-sm font-bold" style="color: #f59e0b;">{{ profile_strength }}%</span>
+                                </div>
+                                <div class="progress" style="height: 6px; border-radius: 3px; background: #f1f5f9;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ profile_strength }}%; background: #f59e0b; border-radius: 3px;"></div>
           </div>
+                            </div>
+                            <a href="{% url 'profile_view' %}" class="btn btn-primary w-100" style="border-radius: 8px;">
+                                <i class="fas fa-user me-2"></i>Complete Profile
+                            </a>
         </div>
 
-        <div class="lg:col-span-4 space-y-6">
-          <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color: #ffffff33; border-width:1px;">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-base font-semibold" style="color: var(--text-heading);">Application Tracker</h3>
+                        <!-- AI Insights Section -->
+                        <div class="content-section" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b;">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                                        <i class="fas fa-robot text-white" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="font-bold mb-0" style="color: #92400e;">AI Insights</h6>
+                                    <small style="color: #a16207;">Smart matching active</small>
+                                </div>
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="h6 mb-1" style="color: #92400e;">95%</div>
+                                    <div class="small" style="color: #a16207;">Accuracy</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="h6 mb-1" style="color: #92400e;">24/7</div>
+                                    <div class="small" style="color: #a16207;">Monitoring</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="h6 mb-1" style="color: #92400e;">3.2s</div>
+                                    <div class="small" style="color: #a16207;">Speed</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Saved Jobs Section -->
+                        <div class="content-section">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="font-bold mb-0" style="color: #1e293b;">Saved Jobs</h5>
+                                <a href="{% url 'user_bookmarks' %}" class="btn btn-outline btn-sm">View All</a>
             </div>
-            <div class="border-b" style="border-color: var(--border);">
-              <nav class="-mb-px flex space-x-4 text-sm" aria-label="Tabs">
-                <a href="#" class="tab-button active-tab" data-target="tab-active">Active ({{ saved|length }})</a>
-                <a href="#" class="tab-button" data-target="tab-interviewing">Interviewing (0)</a>
-                <a href="#" class="tab-button" data-target="tab-archived">Archived (0)</a>
-              </nav>
-            </div>
-            <div id="tab-active" class="tab-content">
+                            
               {% if saved %}
-              <ul class="divide-y" style="border-color: var(--border);">
-                {% for b in saved|slice:':6' %}
-                <li class="py-3 status-row group">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <a href="{{ b.job.get_absolute_url }}" class="text-sm font-medium" style="color: var(--text-heading);">{{ b.job.title }}</a>
-                      <p class="text-xs text-gray-500">{{ b.job.company.name }}</p>
+                                {% for bookmark in saved|slice:":3" %}
+                                    <div class="d-flex justify-content-between align-items-center mb-3 p-3" style="background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                        <div class="flex-grow-1">
+                                            <h6 class="font-medium mb-1" style="color: #1e293b;">{{ bookmark.job.title }}</h6>
+                                            <p class="text-muted text-sm mb-0">{{ bookmark.job.company.name }}</p>
                     </div>
-                    <div class="hidden group-hover:flex items-center gap-2">
-                        <select class="text-xs px-2 py-1 border rounded status-select" style="border-color: var(--border);">
-                          <option>Saved</option><option>Applied</option><option>Interviewing</option><option>Offer</option><option>Rejected</option>
-                        </select>
-                        <button class="text-gray-400 hover:text-red-500" title="Remove"><i class="fas fa-trash"></i></button>
-                    </div>
+                                        <a href="{{ bookmark.job.get_absolute_url }}" class="btn btn-primary btn-sm">View</a>
                   </div>
-                </li>
                 {% endfor %}
-              </ul>
               {% else %}
-                <p class="text-sm text-gray-600 py-4">No saved jobs yet.</p>
+                                <div class="text-center py-4">
+                                    <img src="{% static 'assets/illustrations/Project-planning.svg' %}" alt="No Bookmarks" style="width: 80px; height: 80px; opacity: 0.5; margin-bottom: 1rem;">
+                                    <h6 class="font-bold mb-2" style="color: #1e293b;">No saved jobs yet</h6>
+                                    <p class="text-muted text-sm mb-3">Start bookmarking jobs you're interested in</p>
+                                    <a href="{% url 'find_jobs' %}" class="btn btn-primary">Browse Jobs</a>
+                                </div>
               {% endif %}
             </div>
-            <div id="tab-interviewing" class="tab-content hidden"><p class="text-sm text-gray-600 py-4">No applications in interviewing stage.</p></div>
-            <div id="tab-archived" class="tab-content hidden"><p class="text-sm text-gray-600 py-4">No archived applications.</p></div>
 
-            <a href="#" class="mt-4 inline-block w-full text-center px-3 py-2 rounded-md btn-secondary-brand text-sm">Open Kanban Board</a>
+                        <!-- Quick Actions Section -->
+                        <div class="content-section">
+                            <h5 class="font-bold mb-3" style="color: #1e293b;">Quick Actions</h5>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'find_jobs' %}" class="quick-action-link">
+                                    <i class="fas fa-search"></i>Search Jobs
+                                </a>
+                                <a href="{% url 'profile_view' %}" class="quick-action-link">
+                                    <i class="fas fa-user"></i>Update Profile
+                                </a>
+                                <a href="{% url 'user_bookmarks' %}" class="quick-action-link">
+                                    <i class="fas fa-bookmark"></i>View Bookmarks
+                                </a>
+                                <a href="{% url 'job_alerts' %}" class="quick-action-link">
+                                    <i class="fas fa-bell"></i>Job Alerts
+                                </a>
+                            </div>
+                        </div>
+                    </div>
           </div>
         </div>
-
       </div>
-    </main>
   </div>
 </div>
 
-<style>
-  .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.04), 0 2px 4px -2px rgb(0 0 0 / 0.04); }
-  .status-row { border-left: 3px solid transparent; padding-left: 10px; }
-  .status-saved { border-left-color: #9CA3AF; }
-  .status-applied { border-left-color: #A1A1AA; }
-  .status-interviewing { border-left-color: #4A6CFD; }
-  .status-offer { border-left-color: #10B981; }
-  .status-rejected { border-left-color: #EF4444; }
-  .tab-button {
-    color: #6B7280;
-    padding: 8px 4px;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease-in-out;
-  }
-  .tab-button:hover { color: var(--color-primary); }
-  .tab-button.active-tab {
-    color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
-    font-weight: 600;
-  }
-</style>
-
 <script>
-  // Animate counters
-  document.querySelectorAll('.text-2xl.font-bold').forEach(function(el){
-    const target = parseInt(el.textContent, 10);
-    if (isNaN(target)) return;
-    el.textContent = '0';
-    let current = 0; const step = Math.max(1, Math.round(target/30));
-    const tick = () => { current += step; if (current >= target) { el.textContent = target; } else { el.textContent = current; requestAnimationFrame(tick); } };
-    requestAnimationFrame(tick);
-  });
-
-  // Status color coding
-  function applyStatusColor(row, val){
-    row.classList.remove('status-saved','status-applied','status-interviewing','status-offer','status-rejected');
-    const map = { 'Saved':'status-saved','Applied':'status-applied','Interviewing':'status-interviewing','Offer':'status-offer','Rejected':'status-rejected' };
-    row.classList.add(map[val] || 'status-saved');
-  }
-  document.querySelectorAll('.status-row').forEach(function(row){
-    const select = row.querySelector('.status-select');
-    if (!select) return;
-    applyStatusColor(row, select.value);
-    select.addEventListener('change', function(){ applyStatusColor(row, select.value); });
-  });
-
-  // NEW: Tab functionality for Application Tracker
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
-  tabButtons.forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      // Update button active state
-      tabButtons.forEach(btn => btn.classList.remove('active-tab'));
-      button.classList.add('active-tab');
-      // Show/hide content
-      const targetId = button.getAttribute('data-target');
-      tabContents.forEach(content => {
-        if (content.id === targetId) {
-          content.classList.remove('hidden');
-        } else {
-          content.classList.add('hidden');
-        }
-      });
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
     });
   });
 </script>

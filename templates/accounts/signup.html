@@ -1,93 +1,117 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Sign Up - JobVista{% endblock %}
 
 {% block content %}
-<div class="min-h-[70vh] flex items-center justify-center px-4">
-    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600 mb-3">
-                <i class="fas fa-user-plus"></i>
+<!-- Split Layout Signup Page -->
+<div class="container-fluid p-0" style="background: #FAFAFA; min-height: 100vh;">
+    <div class="row g-0 min-vh-100">
+        <!-- Left Side - Illustration -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #FFD700 0%, #FFA726 100%); position: relative; overflow: hidden;">
+            <!-- Background Pattern -->
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);"></div>
+            
+            <!-- Main Illustration -->
+            <div class="text-center position-relative" style="z-index: 10;">
+                <div class="mb-4">
+                    <img src="{% static 'assets/illustrations/Launch.svg' %}" alt="Launch" style="width: 400px; height: 400px; object-fit: contain;">
+                </div>
+                <h3 class="text-white font-bold mb-2">Start Your Journey</h3>
+                <p class="text-white-50">Join thousands of professionals finding their dream careers</p>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900">Create your account</h1>
-            <p class="text-gray-500 text-sm">Join JobVista to find your next opportunity</p>
+            
+            <!-- Floating Elements -->
+            <div class="position-absolute" style="top: 10%; left: 10%; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border-radius: 50%;"></div>
+            <div class="position-absolute" style="bottom: 15%; right: 15%; width: 40px; height: 40px; background: rgba(255, 255, 255, 0.15); border-radius: 50%;"></div>
         </div>
+        
+        <!-- Right Side - Signup Form -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center" style="background: white;">
+            <div class="w-100" style="max-width: 400px; padding: 1.5rem;">
+                <div class="text-center mb-3">
+                    <img src="{% static 'assets/logo/logo.png' %}" alt="JobVista" class="mb-2" style="height: 2.5rem; width: auto;">
+                    <h2 class="h4 font-bold mb-1" style="color: #2C3E50;">Hello!</h2>
+                    <p class="text-muted small">Create your account to get started</p>
+                </div>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-4 text-sm px-4 py-3 rounded-md bg-red-50 text-red-700 border border-red-100">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label for="first_name" class="form-label small" style="color: #2C3E50; font-weight: 500;">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required 
+                                   placeholder="Enter First Name"
+                                   style="border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px 12px; background: white; font-size: 0.9rem;">
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label for="last_name" class="form-label small" style="color: #2C3E50; font-weight: 500;">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required 
+                                   placeholder="Enter Last Name"
+                                   style="border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px 12px; background: white; font-size: 0.9rem;">
+                        </div>
+                    </div>
 
-        <form method="post" novalidate class="space-y-4">
-            {% csrf_token %}
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                <input type="text" id="username" name="username" pattern="^[\w.@+-]{1,150}$" required
-                       class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="Choose a username">
-                <p class="text-xs text-gray-500 mt-1">150 characters or fewer. Letters, digits and @/./+/-/_</p>
-            </div>
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" id="email" name="email" required
-                       class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="you@example.com">
-            </div>
-            <div>
-                <label for="role" class="block text-sm font-medium text-gray-700 mb-1">I am a</label>
-                <select id="role" name="role" required
-                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="" disabled selected>Select your role</option>
-                    <option value="applicant">Job Applicant</option>
-                    <option value="company">Company/Employer</option>
-                </select>
-            </div>
-            <div>
-                <label for="dob" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" id="dob" name="dob" required
-                       class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-            <div>
-                <label for="password1" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" id="password1" name="password1" minlength="8" required
-                       class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="Create a password">
-                <ul class="text-xs text-gray-500 mt-1 list-disc pl-5">
-                    <li>At least 8 characters</li>
-                    <li>Not a common password</li>
-                    <li>Not entirely numeric</li>
-                </ul>
-            </div>
-            <div>
-                <label for="password2" class="block text-sm font-medium text-gray-700 mb-1">Password Confirmation</label>
-                <input type="password" id="password2" name="password2" required
-                       class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="Re-enter your password">
-            </div>
+                    <div class="mb-2">
+                        <label for="username" class="form-label small" style="color: #2C3E50; font-weight: 500;">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required 
+                               placeholder="Enter Username"
+                               style="border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px 12px; background: white; font-size: 0.9rem;">
+                    </div>
 
-            <button type="submit" class="w-full inline-flex justify-center items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition font-semibold shadow">
-                <i class="fas fa-user-plus"></i>
-                Create Account
-            </button>
+                    <div class="mb-2">
+                        <label for="email" class="form-label small" style="color: #2C3E50; font-weight: 500;">Email</label>
+                        <div class="position-relative">
+                            <i class="fas fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3" style="color: #90A4AE; font-size: 0.8rem;"></i>
+                            <input type="email" class="form-control ps-4" id="email" name="email" required 
+                                   placeholder="Enter Your Email"
+                                   style="border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px 12px; background: white; font-size: 0.9rem;">
+                        </div>
+                    </div>
 
-            <div class="text-center text-sm text-gray-600">
-                Already Registered? <a href="/login" class="text-blue-600 hover:text-blue-800 font-medium">Login</a>
+                    <div class="mb-2">
+                        <label for="password1" class="form-label small" style="color: #2C3E50; font-weight: 500;">Password</label>
+                        <div class="position-relative">
+                            <i class="fas fa-key position-absolute top-50 start-0 translate-middle-y ms-3" style="color: #90A4AE; font-size: 0.8rem;"></i>
+                            <input type="password" class="form-control ps-4" id="password1" name="password1" required 
+                                   placeholder="Enter Password"
+                                   style="border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px 12px; background: white; font-size: 0.9rem;">
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="password2" class="form-label small" style="color: #2C3E50; font-weight: 500;">Confirm Password</label>
+                        <div class="position-relative">
+                            <i class="fas fa-key position-absolute top-50 start-0 translate-middle-y ms-3" style="color: #90A4AE; font-size: 0.8rem;"></i>
+                            <input type="password" class="form-control ps-4" id="password2" name="password2" required 
+                                   placeholder="Confirm Password"
+                                   style="border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px 12px; background: white; font-size: 0.9rem;">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label small" style="color: #2C3E50; font-weight: 500;">I am a</label>
+                        <select class="form-control" id="role" name="role" required 
+                                style="border: 1px solid #E0E0E0; border-radius: 8px; padding: 10px 12px; background: white; font-size: 0.9rem;">
+                            <option value="">Select your role</option>
+                            <option value="job_seeker">Job Seeker</option>
+                            <option value="company">Company/Employer</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn w-100 mb-3 py-2" style="background: #2196F3; color: white; border-radius: 8px; font-size: 0.9rem; font-weight: 500; border: none;">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="text-center">
+                    <p class="text-muted" style="font-size: 0.9rem;">Already have an account? 
+                        <a href="{% url 'login' %}" class="text-danger" style="text-decoration: none; font-weight: 500;">Sign In</a>
+                    </p>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
-
-<script>
-    document.getElementById('role').addEventListener('change', function () {
-        let addCompanySection = document.getElementById('add-company-section');
-        if (addCompanySection) {
-            if (this.value === 'company') {
-                addCompanySection.style.display = 'block';
-            } else {
-                addCompanySection.style.display = 'none';
-            }
-        }
-    });
-</script>
 {% endblock %}

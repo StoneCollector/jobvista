@@ -95,3 +95,28 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification<{self.user.username}: {self.title}>"
+
+
+class JobAlert(models.Model):
+    """Job alert preferences for users"""
+    FREQUENCY_CHOICES = [
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='job_alerts')
+    keywords = models.CharField(max_length=500, help_text="Comma-separated keywords")
+    location = models.CharField(max_length=200, blank=True)
+    salary_min = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    salary_max = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default='weekly')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_sent = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"JobAlert<{self.user.username}: {self.keywords}>"
+
+    class Meta:
+        ordering = ['-created_at']

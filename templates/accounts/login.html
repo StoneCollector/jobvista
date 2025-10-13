@@ -1,46 +1,86 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login - JobVista{% endblock %}
 
 {% block content %}
-<div class="min-h-[70vh] flex items-center justify-center px-4">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600 mb-3">
-                <i class="fas fa-user"></i>
+<!-- Split Layout Login Page -->
+<div class="container-fluid p-0" style="background: #FAFAFA; min-height: 100vh;">
+    <div class="row g-0 min-vh-100">
+        <!-- Left Side - Illustration -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #FFD700 0%, #FFA726 100%); position: relative; overflow: hidden;">
+            <!-- Background Pattern -->
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);"></div>
+            
+            <!-- Main Illustration -->
+            <div class="text-center position-relative" style="z-index: 10;">
+                <div class="mb-4">
+                    <img src="{% static 'assets/illustrations/Secure-login.svg' %}" alt="Secure Login" style="width: 400px; height: 400px; object-fit: contain;">
+                </div>
+                <h3 class="text-white font-bold mb-2">Welcome to JobVista</h3>
+                <p class="text-white-50">Your gateway to finding the perfect career opportunity</p>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900">Welcome back</h1>
-            <p class="text-gray-500 text-sm">Log in to continue</p>
+            
+            <!-- Floating Elements -->
+            <div class="position-absolute" style="top: 10%; left: 10%; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border-radius: 50%;"></div>
+            <div class="position-absolute" style="bottom: 15%; right: 15%; width: 40px; height: 40px; background: rgba(255, 255, 255, 0.15); border-radius: 50%;"></div>
         </div>
+        
+        <!-- Right Side - Login Form -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center" style="background: white;">
+            <div class="w-100" style="max-width: 420px; padding: 2.5rem;">
+                <div class="text-center mb-4">
+                    <img src="{% static 'assets/logo/logo.png' %}" alt="JobVista" class="mb-3" style="height: 3rem; width: auto;">
+                    <h2 class="h3 font-bold mb-2" style="color: #2C3E50;">Hello!</h2>
+                    <p class="text-muted">Login now to get all the updates</p>
+                </div>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-4 text-sm px-4 py-3 rounded-md bg-red-50 text-red-700 border border-red-100">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="username" class="form-label" style="color: #2C3E50; font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem;">Email</label>
+                            <div class="position-relative">
+                                <i class="fas fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3" style="color: #90A4AE; font-size: 0.9rem;"></i>
+                                <input type="text" class="form-control ps-5" id="username" name="username" required 
+                                       placeholder="Enter Your Email"
+                                       style="border: 2px solid #E0E0E0; border-radius: 10px; padding: 14px 16px; background: white; font-size: 1rem; transition: all 0.3s ease;">
+                            </div>
+                        </div>
 
-        <form method="POST" action="/login/" class="space-y-4">
-            {% csrf_token %}
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                <input type="text" name="username" id="username" required placeholder="Enter your username"
-                       class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <div class="mb-4">
+                            <label for="password" class="form-label" style="color: #2C3E50; font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem;">Password</label>
+                            <div class="position-relative">
+                                <i class="fas fa-key position-absolute top-50 start-0 translate-middle-y ms-3" style="color: #90A4AE; font-size: 0.9rem;"></i>
+                                <input type="password" class="form-control ps-5" id="password" name="password" required 
+                                       placeholder="Enter Password"
+                                       style="border: 2px solid #E0E0E0; border-radius: 10px; padding: 14px 16px; background: white; font-size: 1rem; transition: all 0.3s ease;">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember" style="border-color: #E0E0E0; transform: scale(1.1);">
+                                <label class="form-check-label" for="remember" style="color: #2C3E50; font-size: 0.9rem; font-weight: 500;">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="#" class="text-danger" style="font-size: 0.9rem; text-decoration: none; font-weight: 500;">Forgot Password?</a>
+                        </div>
+
+                        <button type="submit" class="btn w-100 mb-4 py-3" style="background: #2196F3; color: white; border-radius: 10px; font-size: 1rem; font-weight: 600; border: none; box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3); transition: all 0.3s ease;">
+                            Login
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="text-muted" style="font-size: 0.9rem;">Don't have an account? 
+                            <a href="{% url 'signup' %}" class="text-danger" style="text-decoration: none; font-weight: 500;">Sign up</a>
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" name="password" id="password" required placeholder="Enter your password"
-                       class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-            <button type="submit" class="w-full inline-flex justify-center items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition font-semibold shadow">
-                <i class="fas fa-sign-in-alt"></i>
-                Log In
-            </button>
-        </form>
-
-        <div class="text-center mt-4 text-sm text-gray-600">
-            Don't have an account?
-            <a href="/register/" class="text-blue-600 hover:text-blue-800 font-medium">Register</a>
         </div>
     </div>
-    </div>
+</div>
 {% endblock %}

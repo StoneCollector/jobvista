@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from bookmarks.models import *
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
@@ -17,6 +18,33 @@ from django.contrib import messages
 from .models import ApplyForJob, Company, Job, JobCategory
 from django.contrib.auth.decorators import login_required
 from accounts.models import UserProfile
+from functools import wraps
+
+
+def company_required(view_func):
+    """Decorator to ensure only company users can access the view"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        if not hasattr(request.user, 'customuser') or request.user.customuser.role != 'company':
+            messages.error(request, 'Access denied. This page is only for company users.')
+            return redirect('dashboard')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def applicant_required(view_func):
+    """Decorator to ensure only applicant users can access the view"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        if not hasattr(request.user, 'customuser') or request.user.customuser.role != 'applicant':
+            messages.error(request, 'Access denied. This page is only for job seekers.')
+            return redirect('company_dashboard')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 # Create your views here.
@@ -46,6 +74,129 @@ def job_list(request):
     location = request.GET.get('location', '')
     if location:
         jobs = jobs.filter(location__icontains=location)
+
+    # New: Filter by experience levels (multi-select)
+    experience_levels = request.GET.getlist('experience')
+    if experience_levels:
+        jobs = jobs.filter(experience_level__in=experience_levels)
+
+    # Pagination
+    paginator = Paginator(jobs, 12)
+    page_number = request.GET.get('page')
+    jobs = paginator.get_page(page_number)
+
+    # Get categories for filter dropdown
+    categories = JobCategory.objects.all()
+
+    context = {
+        'jobs': jobs,
+        'categories': categories,
+        'search_query': search_query,
+        'location': location,
+        'employment_type': employment_type,
+        'experience_levels': experience_levels,
+    }
+    return render(request, 'landing.html', context)
+
+def find_jobs(request):
+    jobs = Job.objects.filter(is_active=True).select_related('company', 'category')
+
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        jobs = jobs.filter(
+            Q(title__icontains=search_query) |
+            Q(company__name__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    # Filter by location
+    location_query = request.GET.get('location', '')
+    if location_query:
+        jobs = jobs.filter(location__icontains=location_query)
+
+    # Filter by employment type
+    employment_type = request.GET.get('employment_type', '')
+    if employment_type:
+        jobs = jobs.filter(employment_type=employment_type)
+
+    # Filter by experience level
+    experience_level = request.GET.get('experience_level', '')
+    if experience_level:
+        jobs = jobs.filter(experience_level=experience_level)
+
+    # Filter by salary range
+    salary_range = request.GET.get('salary_range', '')
+    if salary_range:
+        if salary_range == '0-50000':
+            jobs = jobs.filter(salary_max__lte=50000)
+        elif salary_range == '50000-100000':
+            jobs = jobs.filter(salary_min__gte=50000, salary_max__lte=100000)
+        elif salary_range == '100000-150000':
+            jobs = jobs.filter(salary_min__gte=100000, salary_max__lte=150000)
+        elif salary_range == '150000+':
+            jobs = jobs.filter(salary_min__gte=150000)
+
+    # Filter by remote work
+    remote = request.GET.get('remote', '')
+    if remote == 'true':
+        jobs = jobs.filter(remote_available=True)
+    elif remote == 'false':
+        jobs = jobs.filter(remote_available=False)
+
+    # Filter by company size
+    company_size = request.GET.get('company_size', '')
+    if company_size:
+        if company_size == 'startup':
+            jobs = jobs.filter(company__company_size__icontains='1-50')
+        elif company_size == 'small':
+            jobs = jobs.filter(company__company_size__icontains='51-200')
+        elif company_size == 'medium':
+            jobs = jobs.filter(company__company_size__icontains='201-1000')
+        elif company_size == 'large':
+            jobs = jobs.filter(company__company_size__icontains='1000+')
+
+    # Pagination
+    paginator = Paginator(jobs, 10)
+    page_number = request.GET.get('page')
+    jobs = paginator.get_page(page_number)
+
+    context = {
+        'jobs': jobs,
+        'search_query': search_query,
+        'location_query': location_query,
+        'employment_type': employment_type,
+        'experience_level': experience_level,
+        'salary_range': salary_range,
+        'remote': remote,
+        'company_size': company_size,
+    }
+    return render(request, 'jobs/find_jobs.html', context)
+
+@login_required
+@applicant_required
+def my_applications(request):
+    applications = ApplyForJob.objects.filter(user=request.user).select_related('job', 'job__company', 'job__category').order_by('-created_at')
+    
+    # Calculate stats
+    total_applications = applications.count()
+    pending_applications = applications.filter(status='pending').count()
+    accepted_applications = applications.filter(status='accepted').count()
+    rejected_applications = applications.filter(status='rejected').count()
+    
+    # Pagination
+    paginator = Paginator(applications, 10)
+    page_number = request.GET.get('page')
+    applications = paginator.get_page(page_number)
+    
+    context = {
+        'applications': applications,
+        'total_applications': total_applications,
+        'pending_applications': pending_applications,
+        'accepted_applications': accepted_applications,
+        'rejected_applications': rejected_applications,
+    }
+    return render(request, 'jobs/my_applications.html', context)
 
     # New: Filter by experience levels (multi-select)
     experience_levels = request.GET.getlist('experience')
@@ -130,26 +281,74 @@ def job_list(request):
             hero_title = f"Welcome back, {request.user.first_name or request.user.username}. New matches for '{last_query}'."
             request.session['last_search'] = last_query
 
-    # Match score using cosine similarity; prefer ResumeAnalysis, fallback to profile
+    # Enhanced AI matching with multiple algorithms
     if request.user.is_authenticated:
         try:
             from accounts.models import ResumeAnalysis
             from accounts.ml import compute_resume_keywords, score_job_match
             from accounts.ml_tf import HAS_TF, score_job_match_tf
+            from accounts.ai_analyzer import calculate_skill_match_score, extract_key_phrases
+            
             analysis = getattr(request.user, 'resume_analysis', None)
             skills_src = analysis.skills_extracted if (analysis and (analysis.skills_extracted or '').strip()) else getattr(request.user.userprofile, 'skills', '')
             user_skills, resume_vec = compute_resume_keywords(skills_src, '')
-            if resume_vec:
+            
+            if user_skills:
                 for job in page_obj:
-                    text = f"{job.title} {job.description} {job.requirements} {job.responsibilities}"
-                    if HAS_TF:
-                        # Compose a small resume text from skills for TF vectorization
-                        resume_text = ' '.join(user_skills)
-                        score = score_job_match_tf(resume_text, text)
+                    # Combine job text for analysis
+                    job_text = f"{job.title} {job.description} {job.requirements} {job.responsibilities}"
+                    
+                    # Multiple scoring methods
+                    scores = []
+                    
+                    # 1. Vector similarity (if available)
+                    if resume_vec:
+                        if HAS_TF:
+                            resume_text = ' '.join(user_skills)
+                            vec_score = score_job_match_tf(resume_text, job_text)
+                        else:
+                            vec_score = score_job_match(resume_vec, job_text)
+                        scores.append(vec_score)
+                    
+                    # 2. Skill-based matching
+                    skill_score = calculate_skill_match_score(user_skills, job_text)
+                    scores.append(skill_score)
+                    
+                    # 3. Keyword density matching
+                    job_keywords = extract_key_phrases(job_text, 20)
+                    user_keywords = [skill.lower() for skill in user_skills]
+                    keyword_matches = len(set(job_keywords) & set(user_keywords))
+                    keyword_score = min(100, (keyword_matches / len(job_keywords)) * 100) if job_keywords else 0
+                    scores.append(keyword_score)
+                    
+                    # 4. Experience level matching
+                    experience_bonus = 0
+                    if hasattr(request.user, 'userprofile') and request.user.userprofile.skills:
+                        # Simple heuristic: more skills = more experience
+                        skill_count = len([s for s in request.user.userprofile.skills.split(',') if s.strip()])
+                        if skill_count >= 5 and 'senior' in job_text.lower():
+                            experience_bonus = 15
+                        elif skill_count >= 3 and 'mid' in job_text.lower():
+                            experience_bonus = 10
+                        elif skill_count >= 1 and 'entry' in job_text.lower():
+                            experience_bonus = 20
+                    
+                    # Calculate weighted average
+                    if scores:
+                        final_score = sum(scores) / len(scores) + experience_bonus
+                        final_score = min(100, max(0, final_score))
                     else:
-                        score = score_job_match(resume_vec, text)
-                    setattr(job, 'match_score', score)
-        except Exception:
+                        final_score = 0
+                    
+                    setattr(job, 'match_score', int(final_score))
+                    setattr(job, 'match_breakdown', {
+                        'vector_score': scores[0] if len(scores) > 0 else 0,
+                        'skill_score': scores[1] if len(scores) > 1 else 0,
+                        'keyword_score': scores[2] if len(scores) > 2 else 0,
+                        'experience_bonus': experience_bonus
+                    })
+        except Exception as e:
+            print(f"Error in AI matching: {e}")
             pass
 
     context = {
@@ -177,7 +376,13 @@ def job_list(request):
 
 
 def job_detail(request, slug):
-    job = get_object_or_404(Job, slug=slug, is_active=True)
+    # Handle slugs that might have been URL encoded
+    try:
+        job = get_object_or_404(Job, slug=slug, is_active=True)
+    except:
+        # Try with a cleaned slug if the original fails
+        cleaned_slug = slug.replace('/', '-').replace('\\', '-')
+        job = get_object_or_404(Job, slug=cleaned_slug, is_active=True)
 
     # Check if user has bookmarked this job
     is_bookmarked = False
@@ -199,6 +404,7 @@ def job_detail(request, slug):
 
 
 @login_required
+@applicant_required
 def apply_job(request, slug):
     job = get_object_or_404(Job, slug=slug, is_active=True)
 
@@ -215,6 +421,8 @@ def apply_job(request, slug):
     return render(request, 'jobs/apply_job.html', {'job': job})
 
 
+@login_required
+@company_required
 def create_job(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -247,7 +455,10 @@ def create_job(request):
             messages.error(request, 'Invalid category selected.')
             return redirect('company_view')
 
-        slug_base = slugify(f"{title}-{custom_user.company.name}")
+        # Create a safe slug by replacing problematic characters
+        safe_title = title.replace('/', '-').replace('\\', '-').replace(' ', '-')
+        safe_company = custom_user.company.name.replace('/', '-').replace('\\', '-').replace(' ', '-')
+        slug_base = slugify(f"{safe_title}-{safe_company}")
         slug = slug_base
         idx = 1
         while Job.objects.filter(slug=slug).exists():
@@ -288,6 +499,7 @@ def create_job(request):
 
 
 @login_required
+@company_required
 def create_company(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -324,6 +536,7 @@ def create_company(request):
     return render(request, "Company/create_company.html")
 
 @login_required
+@company_required
 def update_company(request, pk):
     company = get_object_or_404(Company, pk=pk)
 
@@ -349,6 +562,7 @@ def update_company(request, pk):
 
 
 @login_required
+@company_required
 def profile_completion(request):
     custom_user = request.user.customuser
 
@@ -378,7 +592,88 @@ def profile_completion(request):
 
 
 @login_required
+@company_required
+def company_dashboard(request):
+    """Company dashboard with job management and analytics"""
+    # Get company through CustomUser
+    custom_user = getattr(request.user, 'customuser', None)
+    company = getattr(custom_user, 'company', None) if custom_user else None
+    
+    if not company:
+        messages.error(request, 'Company profile not found. Please complete your company profile.')
+        return redirect('profile_completion')
+    
+    # Get company's jobs
+    company_jobs = Job.objects.filter(company=company).order_by('-created_at')
+    active_jobs = company_jobs.filter(is_active=True)
+    
+    # Get applications for company's jobs
+    applications = ApplyForJob.objects.filter(job__company=company).select_related('user', 'job')
+    recent_applications = applications.order_by('-created_at')[:10]
+    
+    # Calculate stats
+    total_jobs = company_jobs.count()
+    active_jobs_count = active_jobs.count()
+    total_applications = applications.count()
+    pending_applications = applications.filter(status='pending').count()
+    
+    # Recent activity
+    recent_activity = []
+    for app in recent_applications[:5]:
+        recent_activity.append({
+            'type': 'application',
+            'message': f'New application for {app.job.title}',
+            'time': app.created_at,
+            'user': app.user
+        })
+    
+    context = {
+        'company': company,
+        'total_jobs': total_jobs,
+        'active_jobs_count': active_jobs_count,
+        'total_applications': total_applications,
+        'pending_applications': pending_applications,
+        'recent_jobs': active_jobs[:5],
+        'recent_applications': recent_applications,
+        'recent_activity': recent_activity,
+    }
+    
+    return render(request, 'Company/dashboard.html', context)
+
+@login_required
+@company_required
+def update_application_status(request, application_id):
+    """Update application status (accept/reject)"""
+    if request.method == 'POST':
+        # Get company through CustomUser
+        custom_user = getattr(request.user, 'customuser', None)
+        company = getattr(custom_user, 'company', None) if custom_user else None
+        
+        if not company:
+            messages.error(request, 'Company profile not found.')
+            return redirect('company_dashboard')
+            
+        application = get_object_or_404(ApplyForJob, id=application_id, job__company=company)
+        new_status = request.POST.get('status')
+        
+        if new_status in ['accepted', 'rejected']:
+            application.status = new_status
+            application.save()
+            
+            # Show success message
+            messages.success(request, f'Application {new_status} successfully!')
+        else:
+            messages.error(request, 'Invalid status update.')
+    
+    return redirect('company_applicants')
+
+@login_required
+@applicant_required
 def dashboard(request):
+    # Check if user is a company
+    if hasattr(request.user, 'company') and request.user.company:
+        return company_dashboard(request)
+    
     # Dashboard: recommended jobs, saved bookmarks, quick stats
     recent_jobs = Job.objects.filter(is_active=True).order_by('-created_at')[:8].select_related('company', 'category')
     saved = []
@@ -448,7 +743,8 @@ def logout_view(request):
 
 
 @login_required
-def company_applicants(request):
+@company_required
+def company_applicants(request, job_id=None):
     custom_user = getattr(request.user, 'customuser', None)
     company = getattr(custom_user, 'company', None) if custom_user else None
     if not company:
@@ -459,9 +755,13 @@ def company_applicants(request):
     qs = ApplyForJob.objects.select_related('user', 'job').filter(job__company=company)
 
     # Optional filters
-    job_id = request.GET.get('job')
+    # Check for job_id from URL parameter first, then from GET parameter
     if job_id:
         qs = qs.filter(job_id=job_id)
+    else:
+        job_id = request.GET.get('job')
+        if job_id:
+            qs = qs.filter(job_id=job_id)
     search = request.GET.get('q', '').strip()
     if search:
         qs = qs.filter(
@@ -484,6 +784,7 @@ def company_applicants(request):
 
 
 @login_required
+@company_required
 def company_applicant_detail(request, application_id: int):
     custom_user = getattr(request.user, 'customuser', None)
     company = getattr(custom_user, 'company', None) if custom_user else None
@@ -548,5 +849,6 @@ def company_applicant_detail(request, application_id: int):
         'missing_skills': missing_skills,
         'suggestions': suggestions,
         'status_choices': ApplyForJob.STATUS_CHOICES,
+        'company': company,
     }
     return render(request, 'Company/applicant_detail.html', context)

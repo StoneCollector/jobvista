@@ -1,187 +1,279 @@
 {% extends 'base.html' %}
-{% block title %}Company Dashboard - JobVista{% endblock %}
+{% load static %}
+
+{% block title %}Post Job - JobVista{% endblock %}
+
 {% block content %}
-<div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
-  <div class="max-w-7xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold" style="color: var(--text-heading);">Company Dashboard</h1>
-        <p class="text-sm text-gray-600">Manage your company profile and jobs</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <div class="hidden sm:flex items-center gap-2 text-xs">
-          <span class="text-gray-500">Status</span>
-          <span class="pill">{{ company.get_status_display|default:company.status }}</span>
+<style>
+    .company-theme {
+        --primary: #1e40af;
+        --primary-light: #3b82f6;
+        --secondary: #64748b;
+        --accent: #059669;
+        --background: #f0f9ff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .company-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border);
+    }
+    
+    .company-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: white;
+        border-radius: 16px 16px 0 0;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .company-logo {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+    
+    .company-form {
+        padding: 2rem;
+    }
+    
+    .form-control {
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    }
+    
+    .btn-company-primary {
+        background: var(--primary);
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-company-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+    }
+    
+    .form-section {
+        background: var(--background);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title i {
+        margin-right: 0.5rem;
+    }
+</style>
+
+<div class="container py-5 company-theme">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="company-card">
+                <div class="company-header">
+                    <div class="company-logo">
+                        <i class="fas fa-briefcase" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <h2 class="font-bold mb-2">Post a New Job</h2>
+                    <p class="mb-0 opacity-90">Create a job posting to attract qualified candidates</p>
+                </div>
+                
+                <div class="company-form">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <!-- Job Details Section -->
+                        <div class="form-section">
+                            <h4 class="section-title">
+                                <i class="fas fa-info-circle"></i>
+                                Job Details
+                            </h4>
+                            
+                            <div class="row">
+                                <div class="col-md-8 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Job Title *</label>
+                                    <input type="text" name="title" class="form-control" placeholder="e.g. Senior Software Engineer" required>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Employment Type *</label>
+                                    <select name="employment_type" class="form-control" required>
+                                        <option value="">Select Type</option>
+                                        <option value="full_time">Full Time</option>
+                                        <option value="part_time">Part Time</option>
+                                        <option value="contract">Contract</option>
+                                        <option value="internship">Internship</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Job Description *</label>
+                                <textarea name="description" rows="6" class="form-control" placeholder="Describe the role, responsibilities, and requirements..." required></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Location *</label>
+                                    <input type="text" name="location" class="form-control" placeholder="e.g. Mumbai, India" required>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Experience Level</label>
+                                    <select name="experience_level" class="form-control">
+                                        <option value="">Select Level</option>
+                                        <option value="entry">Entry Level (0-2 years)</option>
+                                        <option value="mid">Mid Level (2-5 years)</option>
+                                        <option value="senior">Senior Level (5+ years)</option>
+                                        <option value="executive">Executive Level</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Requirements Section -->
+                        <div class="form-section">
+                            <h4 class="section-title">
+                                <i class="fas fa-list-check"></i>
+                                Requirements & Skills
+                            </h4>
+                            
+                            <div class="mb-4">
+                                <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Required Skills</label>
+                                <input type="text" name="required_skills" class="form-control" placeholder="e.g. Python, Django, React, SQL">
+                                <small class="text-muted">Separate skills with commas</small>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Qualifications</label>
+                                <textarea name="qualifications" rows="3" class="form-control" placeholder="Educational requirements, certifications, etc."></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Compensation Section -->
+                        <div class="form-section">
+                            <h4 class="section-title">
+                                <i class="fas fa-dollar-sign"></i>
+                                Compensation
+                            </h4>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Minimum Salary</label>
+                                    <input type="number" name="salary_min" class="form-control" placeholder="e.g. 50000">
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Maximum Salary</label>
+                                    <input type="number" name="salary_max" class="form-control" placeholder="e.g. 80000">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Currency</label>
+                                    <select name="currency" class="form-control">
+                                        <option value="INR">INR (₹)</option>
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Salary Period</label>
+                                    <select name="salary_period" class="form-control">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="yearly">Yearly</option>
+                                        <option value="hourly">Hourly</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Options -->
+                        <div class="form-section">
+                            <h4 class="section-title">
+                                <i class="fas fa-cog"></i>
+                                Additional Options
+                            </h4>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Job Category</label>
+                                    <select name="category" class="form-control">
+                                        <option value="">Select Category</option>
+                                        <option value="technology">Technology</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="sales">Sales</option>
+                                        <option value="hr">Human Resources</option>
+                                        <option value="operations">Operations</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label font-medium mb-2" style="color: var(--text-primary);">Application Deadline</label>
+                                    <input type="date" name="application_deadline" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="remote_available" class="form-check-input" id="remote">
+                                        <label class="form-check-label" for="remote" style="color: var(--text-primary);">
+                                            Remote work available
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="is_active" class="form-check-input" id="active" checked>
+                                        <label class="form-check-label" for="active" style="color: var(--text-primary);">
+                                            Publish job immediately
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="text-center mt-4">
+                            <a href="{% url 'company_view' %}" class="btn btn-outline me-3">Cancel</a>
+                            <button type="submit" class="btn btn-company-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Post Job
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <span class="text-sm text-gray-600">{{ company.name }}</span>
-        {% if company.logo %}
-          <img src="{{ company.logo.url }}" class="w-10 h-10 rounded-lg object-contain border bg-white p-1" style="border-color: var(--border);" alt="{{ company.name }}"/>
-        {% endif %}
-        <a href="{% url 'update_company' company.pk %}" class="btn-secondary-brand px-3 py-2 rounded-md">Edit Company</a>
-      </div>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow hover:shadow-md transition-all" style="border-color:#ffffff33;">
-        <div class="flex items-center gap-3 mb-1">
-          <i class="fas fa-briefcase text-blue-600"></i>
-          <div class="text-gray-600 text-sm">Active Jobs</div>
-        </div>
-        <div class="text-2xl font-semibold">{{ active_jobs_count }}</div>
-      </div>
-      <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow hover:shadow-md transition-all" style="border-color:#ffffff33;">
-        <div class="flex items-center gap-3 mb-1">
-          <i class="fas fa-archive text-yellow-600"></i>
-          <div class="text-gray-600 text-sm">Closed Jobs</div>
-        </div>
-        <div class="text-2xl font-semibold">{{ closed_jobs_count }}</div>
-      </div>
-      <a href="{% url 'company_applicants' %}" class="block backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow hover:shadow-md transition-all" style="border-color:#ffffff33;">
-        <div class="flex items-center gap-3 mb-1">
-          <i class="fas fa-user-friends text-green-600"></i>
-          <div class="text-gray-600 text-sm">Applicants</div>
-        </div>
-        <div class="text-2xl font-semibold">{{ applicants_count }}</div>
-      </a>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <section class="lg:col-span-7 backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="font-semibold" style="color: var(--text-heading);">Post a New Job</h2>
-          <span class="text-xs text-gray-500">Quick Apply enabled by default</span>
-        </div>
-        <form class="space-y-4" method="post" action="{% url 'create_job' %}">
-          {% csrf_token %}
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Job Title</label>
-              <input class="input w-full" name="title" placeholder="e.g. Software Engineer" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Location</label>
-              <input class="input w-full" name="location" placeholder="e.g. Mumbai" required />
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Employment Type</label>
-              <select class="input w-full" name="employment_type" required>
-                {% for value,label in job_employment_types %}
-                  <option value="{{ value }}">{{ label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Experience</label>
-              <select class="input w-full" name="experience_level" required>
-                {% for value,label in job_experience_levels %}
-                  <option value="{{ value }}">{{ label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-sm font-medium mb-1">Salary Min</label>
-                <input type="number" class="input w-full" name="salary_min" placeholder="₹" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1">Salary Max</label>
-                <input type="number" class="input w-full" name="salary_max" placeholder="₹" />
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="remote" name="remote_available" class="rounded border-gray-300" />
-              <label for="remote" class="text-sm">Remote Available</label>
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium mb-1">Application Deadline</label>
-              <input type="date" class="input w-full" name="application_deadline" />
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Category</label>
-            <select class="input w-full" name="category" required>
-              {% for cat in categories %}
-                <option value="{{ cat.id }}">{{ cat.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Description</label>
-            <textarea class="input w-full" rows="4" name="description" placeholder="Describe the job, responsibilities and requirements..." required></textarea>
-          </div>
-          <input type="hidden" name="requirements" value="" />
-          <input type="hidden" name="responsibilities" value="" />
-          <div>
-            <label class="block text-sm font-medium mb-1">Tags (comma separated)</label>
-            <input class="input w-full" placeholder="e.g. Remote, React, Mid Level" />
-          </div>
-          <div class="flex items-center justify-end gap-2">
-            <button type="button" class="btn-secondary-brand px-4 py-2 rounded-md">Save as Draft</button>
-            <button type="submit" class="btn-primary-brand px-5 py-2 rounded-md">Publish Job</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="lg:col-span-5 space-y-6">
-        <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="font-semibold" style="color: var(--text-heading);">Your Active Jobs</h2>
-            <a class="link text-sm" href="#">View all</a>
-          </div>
-          <div class="rounded border overflow-hidden" style="border-color: var(--border);">
-            <table class="min-w-full">
-              <thead>
-              <tr class="bg-white/70">
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Title</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Type</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Applicants</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
-                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 pr-6">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y" style="border-color: var(--border);">
-                {% for j in company.jobs.all %}
-                  <tr class="hover:bg-white/70 transition-colors cursor-pointer" onclick="window.location='{% url 'company_applicants' %}?job={{ j.id }}'" role="button">
-                    <td class="px-4 py-3">
-                      <span class="font-medium" style="color: var(--text-heading);">{{ j.title }}</span>
-                      <div class="text-xs text-gray-500">{{ j.location }} • {{ j.created_at|timesince }} ago</div>
-                    </td>
-                    <td class="px-4 py-3"><span class="pill" style="white-space: nowrap;">{{ j.get_employment_type_display }}</span></td>
-                    <td class="px-4 py-3">{{ j.applied.count }}</td>
-                    <td class="px-4 py-3"><span class="pill" style="white-space: nowrap;">{% if j.is_active %}Active{% else %}Closed{% endif %}</span></td>
-                    <td class="px-4 py-3 space-x-2 text-sm text-right pr-6">
-                      <a class="link" href="{{ j.get_absolute_url }}" onclick="event.stopPropagation()">View</a>
-                      <span class="text-gray-300">|</span>
-                      <span class="text-gray-400" onclick="event.stopPropagation()">Edit</span>
-                      <span class="text-gray-300">|</span>
-                      <a class="link" href="{% url 'company_applicants' %}?job={{ j.id }}" onclick="event.stopPropagation()">Applicants</a>
-                    </td>
-                  </tr>
-                {% empty %}
-                  <tr>
-                    <td class="px-4 py-6 text-sm text-gray-500" colspan="5">No jobs yet. Use the form to post your first role.</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
-          <h3 class="font-semibold mb-2" style="color: var(--text-heading);">Tips to attract talent</h3>
-          <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-            <li>Keep titles clear (e.g., "Senior Backend Engineer").</li>
-            <li>List 5-8 core responsibilities and 5-7 skills.</li>
-            <li>Share salary range to boost conversion.</li>
-            <li>Add 3-5 tags like React, Django, Remote.</li>
-          </ul>
-        </div>
-      </section>
-    </div>
-  </div>
 </div>
 {% endblock %}

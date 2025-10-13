@@ -28,14 +28,18 @@ def toggle_bookmark(request, job_id):
     bookmark, created = JobBookmark.objects.get_or_create(user=request.user, job=job)
 
     if created:
-        messages.success(request, f'Job "{job.title}" bookmarked successfully!')
         bookmarked = True
+        message = f'Job "{job.title}" bookmarked successfully!'
     else:
         bookmark.delete()
-        messages.success(request, f'Job "{job.title}" removed from bookmarks!')
         bookmarked = False
+        message = f'Job "{job.title}" removed from bookmarks!'
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'bookmarked': bookmarked})
+        return JsonResponse({
+            'bookmarked': bookmarked,
+            'message': message,
+            'message_type': 'success'
+        })
 
     return redirect('job_detail', slug=job.slug)

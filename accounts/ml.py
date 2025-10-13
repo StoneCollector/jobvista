@@ -3,6 +3,14 @@ from collections import Counter
 from difflib import get_close_matches
 from typing import List, Tuple, Dict
 
+# Handle optional imports gracefully
+try:
+    import numpy as np
+    HAS_NUMPY = True
+except ImportError:
+    HAS_NUMPY = False
+    np = None
+
 
 CANONICAL_SKILLS = [
     # Programming
