@@ -440,7 +440,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
-        messageContent.innerHTML = content;
+        // Render simple Markdown (bold, lists, line breaks)
+        const html = content
+          .replace(/\n\n/g, '<br/><br/>')
+          .replace(/\n-\s/g, '<br/>• ')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1<\/strong>');
+        messageContent.innerHTML = html;
         
         const messageTime = document.createElement('div');
         messageTime.className = 'message-time';

@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+try:
+    from dotenv import load_dotenv  # optional for local dev
+    load_dotenv()
+except Exception:
+    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -79,6 +84,9 @@ TEMPLATES = [
         },
     },
 ]
+
+# Gemini API Key (read from environment or .env)
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY') or 'AIzaSyCyhbm-ELWaOFj15cjHSkK7lw1dDnCKPIg'
 
 WSGI_APPLICATION = 'JobSite.wsgi.application'
 

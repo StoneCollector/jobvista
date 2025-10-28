@@ -1,24 +1,21 @@
-from django.shortcuts import render, get_object_or_404
-from .models import *
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from bookmarks.models import *
-from django.core.exceptions import PermissionDenied
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.contrib.auth import logout
-import os
+from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from .models import ApplyForJob, Company, Job, JobCategory
-from django.contrib.auth.decorators import login_required
-from accounts.models import UserProfile
 from functools import wraps
+import os
+import json
+
+from .models import *
+from bookmarks.models import *
+from accounts.models import UserProfile
 
 
 def company_required(view_func):
@@ -386,8 +383,10 @@ def job_detail(request, slug):
 
     # Check if user has bookmarked this job
     is_bookmarked = False
+    has_applied = False
     if request.user.is_authenticated:
         is_bookmarked = JobBookmark.objects.filter(user=request.user, job=job).exists()
+        has_applied = ApplyForJob.objects.filter(user=request.user, job=job).exists()
 
     # Get related jobs
     related_jobs = Job.objects.filter(
@@ -398,6 +397,7 @@ def job_detail(request, slug):
     context = {
         'job': job,
         'is_bookmarked': is_bookmarked,
+        'has_applied': has_applied,
         'related_jobs': related_jobs,
     }
     return render(request, 'jobs/job_detail.html', context)
@@ -414,7 +414,23 @@ def apply_job(request, slug):
             messages.info(request, 'You have already applied to this job.')
             return redirect('job_detail', slug=job.slug)
 
-        ApplyForJob.objects.create(user=request.user, job=job)
+        # Calculate AI match score before creating application
+        ai_match_score = 0
+        try:
+            from accounts.models import UserProfile
+            profile = UserProfile.objects.get(user=request.user)
+            ai_match_score = calculate_ai_match_score(
+                type('MockApplication', (), {'job': job, 'user': request.user})(), 
+                profile
+            )
+            print(f"Calculated AI match score for {request.user.username}: {ai_match_score}%")
+        except UserProfile.DoesNotExist:
+            print(f"No profile found for {request.user.username}, using default score: 0")
+        except Exception as e:
+            print(f"Error calculating AI score for {request.user.username}: {e}")
+
+        # Create application with AI match score
+        ApplyForJob.objects.create(user=request.user, job=job, ai_match_score=ai_match_score)
         messages.success(request, 'Application submitted successfully!')
         return redirect('job_detail', slug=job.slug)
 
@@ -607,9 +623,9 @@ def company_dashboard(request):
     company_jobs = Job.objects.filter(company=company).order_by('-created_at')
     active_jobs = company_jobs.filter(is_active=True)
     
-    # Get applications for company's jobs
+    # Get applications for company's jobs - sorted by AI match score
     applications = ApplyForJob.objects.filter(job__company=company).select_related('user', 'job')
-    recent_applications = applications.order_by('-created_at')[:10]
+    recent_applications = applications.order_by('-ai_match_score', '-created_at')[:10]
     
     # Calculate stats
     total_jobs = company_jobs.count()
@@ -630,6 +646,102 @@ def company_dashboard(request):
     # Get categories for job posting form
     categories = JobCategory.objects.all()
     
+    # Get AI-powered insights for company dashboard
+    ai_insights = {}
+    if company:
+        try:
+            from accounts.gemini_chatbot import gemini_chatbot
+            
+            # Create company profile for AI analysis
+            company_profile = {
+                'name': company.name or 'Unknown Company',
+                'industry': company.industry or 'Technology',
+                'location': company.location or 'Unknown',
+                'company_size': company.company_size or 'Unknown',
+                'total_jobs': total_jobs,
+                'active_jobs': active_jobs_count,
+                'total_applications': total_applications,
+                'recent_job_titles': [job.title for job in recent_jobs[:3]] if recent_jobs else [],
+                'skills': ', '.join([job.category.name for job in recent_jobs[:5]]) if recent_jobs else 'General',
+                'first_name': 'Company',
+                'resume_text': '',
+                'db_context': ''
+            }
+            
+            # Get AI company insights
+            company_insights_prompt = f"""
+            As an AI business analyst, analyze this company's hiring data and provide insights in JSON format ONLY:
+
+            Company Profile:
+            - Name: {company_profile['name']}
+            - Industry: {company_profile['industry']}
+            - Location: {company_profile['location']}
+            - Company Size: {company_profile['company_size']}
+            - Total Jobs Posted: {total_jobs}
+            - Active Jobs: {active_jobs_count}
+            - Total Applications: {total_applications}
+            - Recent Job Titles: {', '.join(company_profile['recent_job_titles'])}
+
+            IMPORTANT: Respond ONLY with valid JSON in this exact format:
+            {{
+                "hiring_trends": ["High demand for developers", "Remote work increasing"],
+                "recommendations": ["Post more senior roles", "Improve job descriptions"],
+                "market_position": "competitive",
+                "growth_opportunities": ["Expand to new markets", "Hire specialized roles"],
+                "efficiency_score": 85,
+                "next_steps": ["Optimize job postings", "Improve candidate experience"]
+            }}
+
+            Do not include any text before or after the JSON. Only return the JSON object.
+            """
+            
+            response = gemini_chatbot.generate_response(company_insights_prompt, company_profile)
+            
+            if response and response.get('response'):
+                try:
+                    # Clean the response - remove markdown code blocks if present
+                    response_text = response['response'].strip()
+                    if response_text.startswith('```json'):
+                        response_text = response_text[7:]  # Remove ```json
+                    if response_text.startswith('```'):
+                        response_text = response_text[3:]   # Remove ```
+                    if response_text.endswith('```'):
+                        response_text = response_text[:-3]  # Remove trailing ```
+                    response_text = response_text.strip()
+                    
+                    ai_insights = json.loads(response_text)
+                    
+                except json.JSONDecodeError as e:
+                    # Fallback insights
+                    ai_insights = {
+                        'hiring_trends': ['Strong application volume', 'Competitive market'],
+                        'recommendations': ['Optimize job descriptions', 'Improve candidate screening'],
+                        'market_position': 'competitive',
+                        'growth_opportunities': ['Expand team', 'New market entry'],
+                        'efficiency_score': 80,
+                        'next_steps': ['Review applications', 'Update job postings']
+                    }
+            else:
+                ai_insights = {
+                    'hiring_trends': ['Strong application volume', 'Competitive market'],
+                    'recommendations': ['Optimize job descriptions', 'Improve candidate screening'],
+                    'market_position': 'competitive',
+                    'growth_opportunities': ['Expand team', 'New market entry'],
+                    'efficiency_score': 80,
+                    'next_steps': ['Review applications', 'Update job postings']
+                }
+                    
+        except Exception as e:
+            # Fallback insights
+            ai_insights = {
+                'hiring_trends': ['Strong application volume', 'Competitive market'],
+                'recommendations': ['Optimize job descriptions', 'Improve candidate screening'],
+                'market_position': 'competitive',
+                'growth_opportunities': ['Expand team', 'New market entry'],
+                'efficiency_score': 80,
+                'next_steps': ['Review applications', 'Update job postings']
+            }
+
     context = {
         'company': company,
         'total_jobs': total_jobs,
@@ -640,6 +752,7 @@ def company_dashboard(request):
         'recent_applications': recent_applications,
         'recent_activity': recent_activity,
         'categories': categories,
+        'ai_insights': ai_insights,
     }
     
     return render(request, 'Company/dashboard.html', context)
@@ -813,12 +926,42 @@ def company_applicants(request, job_id=None):
             Q(user__last_name__icontains=search)
         )
 
-    applications = qs.order_by('-created_at')
+    # Sort by AI match score (highest first) - using stored scores
+    applications = qs.order_by('-ai_match_score', '-created_at')
+    
+    # Add ranking data for display (using stored scores)
+    ranked_applications = []
+    for application in applications:
+        try:
+            # Get user profile for additional data
+            profile = UserProfile.objects.get(user=application.user)
+            
+            # Add ranking data for template display
+            application.ai_ranking_data = {
+                'score': application.ai_match_score,
+                'profile': profile,
+                'skills_match': calculate_skills_match(application.job, profile),
+                'experience_level': calculate_experience_level(profile),
+                'resume_completeness': calculate_resume_completeness(profile)
+            }
+            
+        except UserProfile.DoesNotExist:
+            # If no profile, use basic data
+            application.ai_ranking_data = {
+                'score': application.ai_match_score,
+                'profile': None,
+                'skills_match': 0,
+                'experience_level': 'Unknown',
+                'resume_completeness': 0
+            }
+        
+        ranked_applications.append(application)
+    
     jobs = company.jobs.order_by('-created_at')
 
     context = {
         'company': company,
-        'applications': applications,
+        'applications': ranked_applications,
         'jobs': jobs,
         'q': search,
         'selected_job_id': job_id or '',
@@ -869,20 +1012,22 @@ def company_applicant_detail(request, application_id: int):
     if profile and profile.skills:
         skills = [skill.strip() for skill in profile.skills.split(',') if skill.strip()]
 
-    # Static AI-like analysis (placeholder)
-    job_text = f"{application.job.description} {application.job.requirements}".lower()
-    hits = sum(1 for s in [s.lower() for s in skills] if s in job_text)
-    match_score = 20 + min(80, hits * 15)
-
-    suggestions = [
-        'Highlight your most relevant projects at the top of your resume.',
-        'Quantify impact (metrics like performance gains, cost savings).',
-        'Add 2-3 more recent technologies that match the job description.',
-    ]
-    missing_skills = []
-    for s in ['React', 'Django', 'AWS', 'Kubernetes', 'SQL']:
-        if s.lower() not in [x.lower() for x in skills] and s.lower() in job_text:
-            missing_skills.append(s)
+    # Use stored AI match score
+    match_score = application.ai_match_score
+    
+    # Generate comprehensive AI analysis
+    ai_analysis = generate_comprehensive_ai_analysis(application, profile)
+    
+    # Extract analysis components
+    suggestions = ai_analysis.get('suggestions', [])
+    missing_skills = ai_analysis.get('missing_skills', [])
+    strengths = ai_analysis.get('strengths', [])
+    concerns = ai_analysis.get('concerns', [])
+    recommendation = ai_analysis.get('recommendation', '')
+    interview_focus = ai_analysis.get('interview_focus', [])
+    salary_expectation = ai_analysis.get('salary_expectation', {})
+    hiring_timeline = ai_analysis.get('hiring_timeline', '')
+    risk_factors = ai_analysis.get('risk_factors', [])
 
     context = {
         'application': application,
@@ -891,7 +1036,686 @@ def company_applicant_detail(request, application_id: int):
         'match_score': match_score,
         'missing_skills': missing_skills,
         'suggestions': suggestions,
+        'strengths': strengths,
+        'concerns': concerns,
+        'recommendation': recommendation,
+        'interview_focus': interview_focus,
+        'salary_expectation': salary_expectation,
+        'hiring_timeline': hiring_timeline,
+        'risk_factors': risk_factors,
         'status_choices': ApplyForJob.STATUS_CHOICES,
         'company': company,
     }
     return render(request, 'Company/applicant_detail.html', context)
+
+
+# AI-Powered Candidate Analysis Functions
+def generate_comprehensive_ai_analysis(application, profile):
+    """Generate comprehensive AI analysis for candidate detail page"""
+    try:
+        from accounts.gemini_chatbot import gemini_chatbot
+        
+        # Create context for AI analysis
+        candidate_context = {
+            'name': f"{profile.first_name} {profile.last_name}",
+            'skills': profile.skills or '',
+            'resume_text': '',  # Resume text would need to be extracted from resume file
+            'job_title': application.job.title,
+            'job_description': application.job.description,
+            'job_requirements': application.job.requirements or '',
+            'first_name': profile.first_name or 'Candidate',
+            'db_context': ''
+        }
+        
+        # Generate comprehensive AI analysis
+        analysis_prompt = f"""
+        As an AI recruiter, provide comprehensive analysis for this candidate in JSON format ONLY:
+
+        Candidate Profile:
+        - Name: {candidate_context['name']}
+        - Skills: {candidate_context['skills']}
+        - Resume: {candidate_context['resume_text'][:800]}
+
+        Job Position:
+        - Title: {application.job.title}
+        - Description: {application.job.description[:400]}
+        - Requirements: {application.job.requirements or 'Not specified'}
+
+        IMPORTANT: Respond ONLY with valid JSON in this exact format:
+        {{
+            "strengths": ["Strong technical background", "Relevant experience", "Good communication"],
+            "concerns": ["Limited cloud experience", "Could improve leadership skills"],
+            "recommendation": "Strong candidate - recommend for technical interview",
+            "interview_focus": ["System design", "Problem solving", "Cultural fit"],
+            "salary_expectation": {{"min": 90000, "max": 110000}},
+            "hiring_timeline": "2-3 weeks",
+            "risk_factors": ["May have competing offers", "Salary expectations high"],
+            "missing_skills": ["Kubernetes", "Docker"],
+            "suggestions": ["Focus on technical skills in interview", "Discuss growth opportunities"]
+        }}
+
+        Do not include any text before or after the JSON. Only return the JSON object.
+        """
+        
+        response = gemini_chatbot.generate_response(analysis_prompt, candidate_context)
+        
+        if response and response.get('response'):
+            # Clean the response
+            response_text = response['response'].strip()
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            try:
+                analysis = json.loads(response_text)
+                return analysis
+            except json.JSONDecodeError:
+                pass
+        
+        # Fallback analysis
+        return generate_fallback_analysis(application, profile)
+        
+    except Exception as e:
+        print(f"AI analysis error: {e}")
+        return generate_fallback_analysis(application, profile)
+
+def generate_fallback_analysis(application, profile):
+    """Fallback analysis when AI is unavailable"""
+    job_text = f"{application.job.description} {application.job.requirements}".lower()
+    user_skills = [s.strip().lower() for s in profile.skills.split(',') if s.strip()] if profile.skills else []
+    
+    # Calculate missing skills
+    common_skills = ['python', 'javascript', 'react', 'django', 'aws', 'kubernetes', 'docker', 'sql', 'git']
+    missing_skills = [skill for skill in common_skills if skill in job_text and skill not in user_skills]
+    
+    # Generate strengths based on skills
+    strengths = []
+    if profile.skills:
+        strengths.append("Has relevant technical skills")
+    if profile.first_name and profile.last_name:
+        strengths.append("Complete profile information")
+    if profile.email:
+        strengths.append("Professional contact information")
+    
+    # Generate concerns
+    concerns = []
+    if missing_skills:
+        concerns.append(f"Missing key skills: {', '.join(missing_skills[:3])}")
+    if not profile.skills:
+        concerns.append("No skills specified in profile")
+    
+    # Generate recommendation based on match score
+    match_score = application.ai_match_score
+    if match_score >= 70:
+        recommendation = "Strong candidate - recommend for technical interview"
+    elif match_score >= 50:
+        recommendation = "Good candidate - consider for screening"
+    else:
+        recommendation = "May need additional evaluation"
+    
+    return {
+        'strengths': strengths,
+        'concerns': concerns,
+        'recommendation': recommendation,
+        'interview_focus': ['Technical skills', 'Problem solving', 'Cultural fit'],
+        'salary_expectation': {'min': 80000, 'max': 120000},
+        'hiring_timeline': '2-4 weeks',
+        'risk_factors': ['Competitive market'],
+        'missing_skills': missing_skills,
+        'suggestions': [
+            'Focus on technical skills in interview',
+            'Discuss growth opportunities',
+            'Evaluate cultural fit'
+        ]
+    }
+
+# AI-Powered Candidate Ranking Helper Functions
+def calculate_ai_match_score(application, profile):
+    """Calculate comprehensive AI match score for a candidate"""
+    try:
+        from accounts.gemini_chatbot import gemini_chatbot
+        
+        # Create context for AI analysis
+        candidate_context = {
+            'name': f"{profile.first_name} {profile.last_name}",
+            'skills': profile.skills or '',
+            'resume_text': '',  # Resume text would need to be extracted from resume file
+            'job_title': application.job.title,
+            'job_description': application.job.description,
+            'job_requirements': application.job.requirements or '',
+            'first_name': profile.first_name or 'Candidate',
+            'db_context': ''
+        }
+        
+        # Generate AI match score
+        scoring_prompt = f"""
+        As an AI recruiter, analyze this candidate's match for the job position and provide ONLY a match score (0-100) in JSON format:
+
+        Candidate Profile:
+        - Name: {candidate_context['name']}
+        - Skills: {candidate_context['skills']}
+        - Resume: {candidate_context['resume_text'][:800]}
+
+        Job Position:
+        - Title: {application.job.title}
+        - Description: {application.job.description[:400]}
+        - Requirements: {application.job.requirements or 'Not specified'}
+
+        IMPORTANT: Respond ONLY with valid JSON in this exact format:
+        {{
+            "match_score": 85,
+            "reasoning": "Strong technical background with relevant skills"
+        }}
+
+        Do not include any text before or after the JSON. Only return the JSON object.
+        """
+        
+        response = gemini_chatbot.generate_response(scoring_prompt, candidate_context)
+        
+        if response and response.get('response'):
+            # Clean the response
+            response_text = response['response'].strip()
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            try:
+                result = json.loads(response_text)
+                return result.get('match_score', 50)
+            except json.JSONDecodeError:
+                pass
+        
+        # Fallback to rule-based scoring
+        return calculate_fallback_match_score(application, profile)
+        
+    except Exception as e:
+        print(f"AI scoring error: {e}")
+        return calculate_fallback_match_score(application, profile)
+
+def calculate_fallback_match_score(application, profile):
+    """Fallback rule-based match scoring"""
+    score = 0
+    
+    # Skills matching (40% weight)
+    if profile.skills:
+        job_text = f"{application.job.description} {application.job.requirements}".lower()
+        user_skills = [s.strip().lower() for s in profile.skills.split(',') if s.strip()]
+        skill_matches = sum(1 for skill in user_skills if skill in job_text)
+        skills_score = min(40, skill_matches * 8)
+        score += skills_score
+    
+    # Resume completeness (20% weight)
+    resume_fields = [profile.first_name, profile.last_name, profile.email, profile.resume]
+    completeness = sum(1 for field in resume_fields if field) / len(resume_fields)
+    score += completeness * 20
+    
+    # Profile completeness (20% weight)
+    profile_fields = [profile.first_name, profile.last_name, profile.phone, profile.email, profile.skills]
+    profile_completeness = sum(1 for field in profile_fields if field) / len(profile_fields)
+    score += profile_completeness * 20
+    
+    # Experience level bonus (20% weight)
+    if profile.skills:
+        skill_count = len([s for s in profile.skills.split(',') if s.strip()])
+        if skill_count >= 5:
+            score += 20
+        elif skill_count >= 3:
+            score += 15
+        elif skill_count >= 1:
+            score += 10
+    
+    return min(100, max(0, int(score)))
+
+def calculate_skills_match(job, profile):
+    """Calculate skills match percentage"""
+    if not profile.skills:
+        return 0
+    
+    job_text = f"{job.description} {job.requirements}".lower()
+    user_skills = [s.strip().lower() for s in profile.skills.split(',') if s.strip()]
+    
+    if not user_skills:
+        return 0
+    
+    matches = sum(1 for skill in user_skills if skill in job_text)
+    return int((matches / len(user_skills)) * 100)
+
+def calculate_experience_level(profile):
+    """Determine experience level based on profile"""
+    if not profile.skills:
+        return 'Entry Level'
+    
+    skill_count = len([s for s in profile.skills.split(',') if s.strip()])
+    
+    if skill_count >= 8:
+        return 'Senior Level'
+    elif skill_count >= 5:
+        return 'Mid Level'
+    elif skill_count >= 2:
+        return 'Junior Level'
+    else:
+        return 'Entry Level'
+
+def calculate_resume_completeness(profile):
+    """Calculate resume completeness percentage"""
+    fields = [profile.first_name, profile.last_name, profile.email, profile.resume, profile.skills]
+    completed = sum(1 for field in fields if field)
+    return int((completed / len(fields)) * 100)
+
+# AI-Powered Job Posting
+@login_required
+@company_required
+@require_http_methods(["POST"])
+def ai_generate_job_posting(request):
+    """AI-powered job posting generation from natural language prompt"""
+    try:
+        data = json.loads(request.body)
+        job_prompt = data.get('job_prompt', '')
+        company_context = data.get('company_context', {})
+        
+        if not job_prompt:
+            return JsonResponse({'success': False, 'error': 'Job prompt is required'})
+        
+        # Get company information
+        custom_user = getattr(request.user, 'customuser', None)
+        company = getattr(custom_user, 'company', None) if custom_user else None
+        
+        if not company:
+            return JsonResponse({'success': False, 'error': 'Company profile not found'})
+        
+        from accounts.gemini_chatbot import gemini_chatbot
+        
+        # Create context for AI job generation
+        ai_context = {
+            'company_name': company.name or 'Our Company',
+            'company_industry': 'Technology',  # Default since Company model doesn't have industry field
+            'company_location': company.location or 'Remote',
+            'company_size': company.company_size or 'Medium',
+            'job_prompt': job_prompt,
+            'first_name': 'Company',
+            'skills': company_context.get('skills', ''),
+            'resume_text': '',
+            'db_context': ''
+        }
+        
+        # Generate AI job posting
+        job_generation_prompt = f"""
+        As an AI HR specialist, create a complete job posting from this natural language description in JSON format ONLY:
+
+        Company Context:
+        - Company: {ai_context['company_name']}
+        - Industry: {ai_context['company_industry']}
+        - Location: {ai_context['company_location']}
+        - Size: {ai_context['company_size']}
+
+        Job Description Prompt:
+        "{job_prompt}"
+
+        IMPORTANT: Respond ONLY with valid JSON in this exact format:
+        {{
+            "title": "Senior Software Engineer",
+            "description": "We are looking for a Senior Software Engineer to join our team...",
+            "requirements": "• Bachelor's degree in Computer Science or related field\\n• 5+ years of software development experience\\n• Proficiency in Python, JavaScript, React\\n• Experience with cloud platforms (AWS, Azure)\\n• Strong problem-solving and communication skills",
+            "responsibilities": "• Design and develop scalable software solutions\\n• Collaborate with cross-functional teams\\n• Mentor junior developers\\n• Participate in code reviews and technical discussions",
+            "benefits": "• Competitive salary and equity\\n• Health, dental, and vision insurance\\n• Flexible work arrangements\\n• Professional development opportunities",
+            "salary_range": {{"min": 120000, "max": 180000, "currency": "USD"}},
+            "employment_type": "Full-time",
+            "experience_level": "Senior",
+            "location": "San Francisco, CA",
+            "remote_work": "Hybrid",
+            "skills_required": ["Python", "JavaScript", "React", "AWS", "Docker"],
+            "nice_to_have": ["Kubernetes", "GraphQL", "Machine Learning"],
+            "company_culture": "Fast-paced, innovative, collaborative environment",
+            "growth_opportunities": "Opportunity to lead technical initiatives and mentor team members"
+        }}
+
+        Do not include any text before or after the JSON. Only return the JSON object.
+        """
+        
+        response = gemini_chatbot.generate_response(job_generation_prompt, ai_context)
+        
+        if response and response.get('response'):
+            # Clean the response
+            response_text = response['response'].strip()
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            try:
+                job_data = json.loads(response_text)
+                return JsonResponse({
+                    'success': True,
+                    'job_data': job_data,
+                    'type': response.get('type', 'gemini')
+                })
+            except json.JSONDecodeError:
+                pass
+        
+        # Fallback job data
+        return JsonResponse({
+            'success': True,
+            'job_data': {
+                'title': 'Software Engineer',
+                'description': f'We are looking for a Software Engineer to join our team. {job_prompt}',
+                'requirements': '• Bachelor\'s degree in Computer Science or related field\n• 2+ years of software development experience\n• Strong problem-solving skills',
+                'responsibilities': '• Develop and maintain software applications\n• Collaborate with team members\n• Write clean, maintainable code',
+                'benefits': '• Competitive salary\n• Health insurance\n• Flexible work arrangements',
+                'salary_range': {'min': 80000, 'max': 120000, 'currency': 'USD'},
+                'employment_type': 'Full-time',
+                'experience_level': 'Mid-level',
+                'location': company.location or 'Remote',
+                'remote_work': 'Hybrid',
+                'skills_required': ['Python', 'JavaScript'],
+                'nice_to_have': ['React', 'AWS'],
+                'company_culture': 'Innovative and collaborative environment',
+                'growth_opportunities': 'Opportunity to grow and learn new technologies'
+            },
+            'type': 'fallback'
+        })
+        
+    except Exception as e:
+        print(f"AI job generation error: {e}")
+        return JsonResponse({'success': False, 'error': str(e)})
+
+# AI-Powered Company Features
+@login_required
+@company_required
+@require_http_methods(["POST"])
+def ai_job_suggestions(request):
+    """AI-powered job description suggestions"""
+    try:
+        data = json.loads(request.body)
+        job_title = data.get('job_title', '')
+        job_description = data.get('job_description', '')
+        industry = data.get('industry', '')
+        location = data.get('location', '')
+        
+        from accounts.gemini_chatbot import gemini_chatbot
+        
+        # Create context for AI analysis
+        job_context = {
+            'title': job_title,
+            'description': job_description,
+            'industry': industry,
+            'location': location,
+            'skills': '',
+            'first_name': request.user.first_name or 'Company',
+            'resume_text': '',
+            'db_context': ''
+        }
+        
+        # Generate AI suggestions
+        suggestions_prompt = f"""
+        As an AI HR specialist, analyze this job posting and provide comprehensive suggestions in JSON format ONLY:
+
+        Job Details:
+        - Title: {job_title}
+        - Description: {job_description}
+        - Industry: {industry}
+        - Location: {location}
+
+        IMPORTANT: Respond ONLY with valid JSON in this exact format:
+        {{
+            "essential_skills": ["Python", "Django", "PostgreSQL", "AWS"],
+            "nice_to_have_skills": ["React", "Docker", "Kubernetes", "GraphQL"],
+            "salary_range": {{"min": 80000, "max": 120000, "currency": "USD"}},
+            "inclusive_language_score": 85,
+            "inclusive_suggestions": ["Use 'they' instead of 'he/she'", "Focus on skills over credentials"],
+            "market_trends": ["Remote work increasing", "Cloud skills in demand"],
+            "optimization_tips": ["Add specific metrics", "Include growth opportunities"]
+        }}
+
+        Do not include any text before or after the JSON. Only return the JSON object.
+        """
+        
+        response = gemini_chatbot.generate_response(suggestions_prompt, job_context)
+        
+        if response and response.get('response'):
+            # Clean the response
+            response_text = response['response'].strip()
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            try:
+                suggestions = json.loads(response_text)
+                return JsonResponse({
+                    'success': True,
+                    'suggestions': suggestions,
+                    'type': response.get('type', 'gemini')
+                })
+            except json.JSONDecodeError:
+                # Fallback suggestions
+                return JsonResponse({
+                    'success': True,
+                    'suggestions': {
+                        'essential_skills': ['Python', 'Django', 'PostgreSQL', 'AWS'],
+                        'nice_to_have_skills': ['React', 'Docker', 'Kubernetes'],
+                        'salary_range': {'min': 80000, 'max': 120000, 'currency': 'USD'},
+                        'inclusive_language_score': 85,
+                        'inclusive_suggestions': ['Use gender-neutral language', 'Focus on skills'],
+                        'market_trends': ['Remote work increasing', 'Cloud skills in demand'],
+                        'optimization_tips': ['Add specific metrics', 'Include growth opportunities']
+                    },
+                    'type': 'fallback'
+                })
+        
+        return JsonResponse({'success': False, 'error': 'AI service unavailable'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@company_required
+@require_http_methods(["POST"])
+def ai_candidate_analysis(request):
+    """AI-powered candidate analysis and ranking"""
+    try:
+        data = json.loads(request.body)
+        application_id = data.get('application_id')
+        
+        if not application_id:
+            return JsonResponse({'success': False, 'error': 'Application ID required'})
+        
+        # Get application and user profile
+        application = get_object_or_404(ApplyForJob, id=application_id)
+        profile = get_object_or_404(UserProfile, user=application.user)
+        
+        from accounts.gemini_chatbot import gemini_chatbot
+        
+        # Create candidate context
+        candidate_context = {
+            'name': f"{profile.first_name} {profile.last_name}",
+            'skills': profile.skills or '',
+            'experience': '3+ years',  # This could be calculated from profile
+            'job_title': application.job.title,
+            'job_description': application.job.description,
+            'job_requirements': application.job.requirements or '',
+            'resume_text': profile.resume_text or '',
+            'first_name': profile.first_name or 'Candidate',
+            'db_context': ''
+        }
+        
+        # Generate AI analysis
+        analysis_prompt = f"""
+        As an AI recruiter, analyze this candidate for the job position and provide detailed insights in JSON format ONLY:
+
+        Candidate Profile:
+        - Name: {candidate_context['name']}
+        - Skills: {candidate_context['skills']}
+        - Experience: {candidate_context['experience']}
+        - Resume: {candidate_context['resume_text'][:1000]}
+
+        Job Position:
+        - Title: {application.job.title}
+        - Description: {application.job.description[:500]}
+        - Requirements: {application.job.requirements or 'Not specified'}
+
+        IMPORTANT: Respond ONLY with valid JSON in this exact format:
+        {{
+            "match_score": 85,
+            "strengths": ["Strong technical background", "Relevant experience", "Good communication"],
+            "concerns": ["Limited cloud experience", "Could improve leadership skills"],
+            "recommendation": "Strong candidate - recommend for technical interview",
+            "interview_focus": ["System design", "Problem solving", "Cultural fit"],
+            "salary_expectation": {{"min": 90000, "max": 110000}},
+            "hiring_timeline": "2-3 weeks",
+            "risk_factors": ["May have competing offers", "Salary expectations high"]
+        }}
+
+        Do not include any text before or after the JSON. Only return the JSON object.
+        """
+        
+        response = gemini_chatbot.generate_response(analysis_prompt, candidate_context)
+        
+        if response and response.get('response'):
+            # Clean the response
+            response_text = response['response'].strip()
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            try:
+                analysis = json.loads(response_text)
+                return JsonResponse({
+                    'success': True,
+                    'analysis': analysis,
+                    'type': response.get('type', 'gemini')
+                })
+            except json.JSONDecodeError:
+                # Fallback analysis
+                return JsonResponse({
+                    'success': True,
+                    'analysis': {
+                        'match_score': 80,
+                        'strengths': ['Strong technical background', 'Relevant experience'],
+                        'concerns': ['Limited experience in some areas'],
+                        'recommendation': 'Good candidate - consider for interview',
+                        'interview_focus': ['Technical skills', 'Problem solving'],
+                        'salary_expectation': {'min': 85000, 'max': 105000},
+                        'hiring_timeline': '2-4 weeks',
+                        'risk_factors': ['Competitive market']
+                    },
+                    'type': 'fallback'
+                })
+        
+        return JsonResponse({'success': False, 'error': 'AI service unavailable'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@company_required
+@require_http_methods(["POST"])
+def ai_interview_scheduler(request):
+    """AI-powered interview scheduling assistance"""
+    try:
+        data = json.loads(request.body)
+        application_id = data.get('application_id')
+        preferred_times = data.get('preferred_times', [])
+        
+        if not application_id:
+            return JsonResponse({'success': False, 'error': 'Application ID required'})
+        
+        application = get_object_or_404(ApplyForJob, id=application_id)
+        
+        from accounts.gemini_chatbot import gemini_chatbot
+        
+        # Create scheduling context
+        scheduling_context = {
+            'candidate_name': f"{application.user.first_name} {application.user.last_name}",
+            'job_title': application.job.title,
+            'company_name': application.job.company.name,
+            'preferred_times': ', '.join(preferred_times),
+            'skills': '',
+            'first_name': 'Scheduler',
+            'resume_text': '',
+            'db_context': ''
+        }
+        
+        # Generate AI scheduling suggestions
+        scheduling_prompt = f"""
+        As an AI scheduling assistant, help coordinate an interview and provide suggestions in JSON format ONLY:
+
+        Interview Details:
+        - Candidate: {application.user.first_name} {application.user.last_name}
+        - Position: {application.job.title}
+        - Company: {application.job.company.name}
+        - Preferred Times: {', '.join(preferred_times)}
+
+        IMPORTANT: Respond ONLY with valid JSON in this exact format:
+        {{
+            "suggested_times": ["Monday 2:00 PM", "Tuesday 10:00 AM", "Wednesday 3:00 PM"],
+            "interview_duration": "60 minutes",
+            "interview_format": "Video call",
+            "preparation_tips": ["Review candidate resume", "Prepare technical questions", "Check calendar"],
+            "follow_up_actions": ["Send calendar invite", "Share interview details", "Prepare feedback form"],
+            "best_time": "Tuesday 10:00 AM",
+            "reasoning": "Morning slot shows professionalism, avoids lunch conflicts"
+        }}
+
+        Do not include any text before or after the JSON. Only return the JSON object.
+        """
+        
+        response = gemini_chatbot.generate_response(scheduling_prompt, scheduling_context)
+        
+        if response and response.get('response'):
+            # Clean the response
+            response_text = response['response'].strip()
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            try:
+                scheduling = json.loads(response_text)
+                return JsonResponse({
+                    'success': True,
+                    'scheduling': scheduling,
+                    'type': response.get('type', 'gemini')
+                })
+            except json.JSONDecodeError:
+                # Fallback scheduling
+                return JsonResponse({
+                    'success': True,
+                    'scheduling': {
+                        'suggested_times': ['Monday 2:00 PM', 'Tuesday 10:00 AM', 'Wednesday 3:00 PM'],
+                        'interview_duration': '60 minutes',
+                        'interview_format': 'Video call',
+                        'preparation_tips': ['Review candidate resume', 'Prepare questions'],
+                        'follow_up_actions': ['Send calendar invite', 'Share details'],
+                        'best_time': 'Tuesday 10:00 AM',
+                        'reasoning': 'Morning slot shows professionalism'
+                    },
+                    'type': 'fallback'
+                })
+        
+        return JsonResponse({'success': False, 'error': 'AI service unavailable'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

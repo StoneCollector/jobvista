@@ -218,6 +218,16 @@
             <div class="mb-4">
                 <h1 class="font-bold mb-2" style="color: #1e293b; font-size: 2rem;">Career Advice</h1>
                 <p class="text-muted mb-0">Get AI-powered resume analysis and career guidance</p>
+                
+                <!-- Display messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
             </div>
 
             <!-- Resume Analysis Section -->
@@ -228,7 +238,7 @@
                     <p class="text-muted">Upload your resume to get AI-powered advice and discover companies that are a great fit for you.</p>
                 </div>
                 
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data" id="resume-form">
                     {% csrf_token %}
                     <div class="text-center">
                         <label for="resume-upload" class="form-label font-medium mb-3" style="color: #1e293b;">Upload your resume (PDF, DOCX):</label>
@@ -236,7 +246,7 @@
                                accept=".pdf,.doc,.docx" required 
                                style="border: 2px dashed #e2e8f0; border-radius: 12px; padding: 2rem; background: #f8fafc;">
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary" style="border-radius: 12px; padding: 1rem 2rem;">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 12px; padding: 1rem 2rem;" id="analyze-btn">
                                 <i class="fas fa-upload me-2"></i>Analyze My Resume
                             </button>
                         </div>
@@ -387,8 +397,108 @@
                     {% endif %}
                     {% endif %}
 
-                    <!-- ATS Score -->
-                    {% if ats_score %}
+                    <!-- Resume Analysis Results -->
+                    {% if resume_analysis %}
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+                            <div class="card-body p-4">
+                                <h5 class="font-bold mb-4" style="color: #1e293b;">
+                                    <i class="fas fa-file-alt me-2" style="color: #3b82f6;"></i>Resume Analysis Results
+                                </h5>
+                                
+                                <!-- Scores Row -->
+                                <div class="row mb-4">
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <div class="display-4 font-bold" style="color: #3b82f6;">{{ resume_analysis.ats_score }}%</div>
+                                            <p class="text-muted mb-2">ATS Score</p>
+                                            <div class="progress" style="height: 6px; border-radius: 3px; background: #e2e8f0;">
+                                                <div class="progress-bar" style="width: {{ resume_analysis.ats_score }}%; background: #3b82f6; border-radius: 3px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <div class="display-4 font-bold" style="color: #10b981;">{{ resume_analysis.format_score }}%</div>
+                                            <p class="text-muted mb-2">Format Score</p>
+                                            <div class="progress" style="height: 6px; border-radius: 3px; background: #e2e8f0;">
+                                                <div class="progress-bar" style="width: {{ resume_analysis.format_score }}%; background: #10b981; border-radius: 3px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <div class="display-4 font-bold" style="color: #f59e0b;">{{ resume_analysis.content_score }}%</div>
+                                            <p class="text-muted mb-2">Content Score</p>
+                                            <div class="progress" style="height: 6px; border-radius: 3px; background: #e2e8f0;">
+                                                <div class="progress-bar" style="width: {{ resume_analysis.content_score }}%; background: #f59e0b; border-radius: 3px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Analysis Details -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <h6 class="font-bold mb-3" style="color: #1e293b;">
+                                            <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>Strengths
+                                        </h6>
+                                        <ul class="list-unstyled">
+                                            {% for strength in resume_analysis.strengths %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-arrow-right me-2" style="color: #10b981;"></i>{{ strength }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6 mb-4">
+                                        <h6 class="font-bold mb-3" style="color: #1e293b;">
+                                            <i class="fas fa-exclamation-triangle me-2" style="color: #ef4444;"></i>Areas for Improvement
+                                        </h6>
+                                        <ul class="list-unstyled">
+                                            {% for improvement in resume_analysis.improvements %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-arrow-right me-2" style="color: #ef4444;"></i>{{ improvement }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Missing Keywords -->
+                                {% if resume_analysis.keywords_missing %}
+                                    <div class="mb-4">
+                                        <h6 class="font-bold mb-3" style="color: #1e293b;">
+                                            <i class="fas fa-key me-2" style="color: #3b82f6;"></i>Missing Keywords
+                                        </h6>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for keyword in resume_analysis.keywords_missing %}
+                                                <span class="badge" style="background: #dbeafe; color: #1e40af; border-radius: 15px; padding: 0.5rem 1rem;">{{ keyword }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Recommendations -->
+                                {% if resume_analysis.recommendations %}
+                                    <div>
+                                        <h6 class="font-bold mb-3" style="color: #1e293b;">
+                                            <i class="fas fa-lightbulb me-2" style="color: #f59e0b;"></i>AI Recommendations
+                                        </h6>
+                                        <ul class="list-unstyled">
+                                            {% for rec in resume_analysis.recommendations %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-arrow-right me-2" style="color: #f59e0b;"></i>{{ rec }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- ATS Score (Fallback) -->
+                    {% if ats_score and not resume_analysis %}
                         <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
                             <div class="card-body p-4">
                                 <div class="row align-items-center">
@@ -486,6 +596,32 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('expanded');
     });
+    
+    // Handle resume form submission
+    const resumeForm = document.getElementById('resume-form');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    
+    if (resumeForm && analyzeBtn) {
+        resumeForm.addEventListener('submit', function(e) {
+            console.log('Form submitted');
+            const fileInput = document.getElementById('resume-upload');
+            if (!fileInput.files[0]) {
+                e.preventDefault();
+                alert('Please select a resume file first.');
+                return;
+            }
+            
+            // Show loading state
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+            analyzeBtn.disabled = true;
+            
+            // Re-enable after 10 seconds as fallback
+            setTimeout(() => {
+                analyzeBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Analyze My Resume';
+                analyzeBtn.disabled = false;
+            }, 10000);
+        });
+    }
 });
 </script>
 {% endblock %}

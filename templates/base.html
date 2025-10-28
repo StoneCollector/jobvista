@@ -483,10 +483,10 @@
                     <a href="{% url 'company_view' %}" class="nav-link">My Jobs</a>
                 </div>
                 {% endif %}
-            </div>
+                </div>
 
             <div class="d-flex align-items-center gap-2">
-                {% if user.is_authenticated %}
+                        {% if user.is_authenticated %}
                     <!-- Alerts Dropdown -->
                     <div class="dropdown me-2">
                         <button class="btn btn-outline dropdown-toggle d-flex align-items-center gap-2 position-relative" type="button" id="alertsDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.5rem 1rem; background: white;">
@@ -497,7 +497,7 @@
                                 {{ notifications|length }}
                             </span>
                             {% endif %}
-                        </button>
+                                </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="alertsDropdown" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: var(--shadow-lg); padding: 0.5rem 0; min-width: 350px; max-width: 400px;">
                             <li class="px-3 py-2 border-bottom" style="border-color: #f1f5f9;">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -514,8 +514,8 @@
                                         <div class="flex-shrink-0">
                                             <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #fef3c7; color: #f59e0b;">
                                                 <i class="fas fa-bell" style="font-size: 0.8rem;"></i>
-                                            </div>
-                                        </div>
+                                </div>
+                            </div>
                                         <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
                                             <div class="font-semibold" style="color: var(--text-primary); font-size: 0.9rem; line-height: 1.3; word-wrap: break-word;">{{ notification.title }}</div>
                                             <div class="text-muted" style="font-size: 0.8rem; line-height: 1.3; margin-top: 0.25rem; word-wrap: break-word; max-height: 2.6rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ notification.message }}</div>
@@ -530,20 +530,20 @@
                                         <i class="fas fa-eye me-1"></i>View All Alerts ({{ notifications|length }})
                                     </a>
                                 </li>
-                                {% else %}
+                        {% else %}
                                 <li class="px-3 py-2 text-center">
                                     <a href="{% url 'job_alerts' %}" class="btn btn-outline btn-sm w-100" style="border-radius: 6px; font-size: 0.8rem;">
                                         <i class="fas fa-eye me-1"></i>View All Alerts
                                     </a>
                                 </li>
-                                {% endif %}
+                        {% endif %}
                             {% else %}
                                 <li class="px-3 py-4 text-center">
                                     <div class="text-muted" style="font-size: 0.9rem;">
                                         <i class="fas fa-bell-slash mb-2" style="font-size: 1.5rem; color: #cbd5e1;"></i>
                                         <div>No new alerts</div>
                                         <small>We'll notify you when relevant jobs are posted</small>
-                                    </div>
+                    </div>
                                 </li>
                                 <li class="px-3 py-2 text-center">
                                     <a href="{% url 'job_alerts' %}" class="btn btn-outline btn-sm w-100" style="border-radius: 6px; font-size: 0.8rem;">
@@ -552,7 +552,7 @@
                                 </li>
                             {% endif %}
                         </ul>
-                    </div>
+                </div>
 
                     <!-- Enhanced User Profile Dropdown -->
                     <div class="dropdown">
@@ -561,7 +561,7 @@
                                 <i class="fas fa-user"></i>
                             </div>
                             <span class="font-medium" style="color: var(--text-primary);">{{ user.first_name|default:user.username|truncatechars:15 }}</span>
-                        </button>
+                    </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: var(--shadow-lg); padding: 0.5rem 0; min-width: 200px;">
                             <li class="px-3 py-2 border-bottom" style="border-color: #f1f5f9;">
                                 <div class="d-flex align-items-center gap-2">
@@ -571,14 +571,18 @@
                                     <div>
                                         <div class="font-semibold" style="color: var(--text-primary); font-size: 0.9rem;">{{ user.first_name|default:user.username }}</div>
                                         <div class="text-muted" style="font-size: 0.8rem;">{{ user.email }}</div>
-                                    </div>
-                                </div>
+                </div>
+            </div>
                             </li>
                             {% if user.customuser.role == 'company' %}
                             <li><a class="dropdown-item" href="{% url 'company_dashboard' %}" style="padding: 0.75rem 1rem; color: var(--text-primary);"><i class="fas fa-tachometer-alt me-2"></i>Company Dashboard</a></li>
                             <li><a class="dropdown-item" href="{% url 'company_applicants' %}" style="padding: 0.75rem 1rem; color: var(--text-primary);"><i class="fas fa-users me-2"></i>All Applicants</a></li>
                             <li><a class="dropdown-item" href="{% url 'company_view' %}" style="padding: 0.75rem 1rem; color: var(--text-primary);"><i class="fas fa-briefcase me-2"></i>My Jobs</a></li>
+                            {% if user.customuser.company %}
                             <li><a class="dropdown-item" href="{% url 'update_company' user.customuser.company.id %}" style="padding: 0.75rem 1rem; color: var(--text-primary);"><i class="fas fa-building me-2"></i>Company Profile</a></li>
+                            {% else %}
+                            <li><a class="dropdown-item" href="{% url 'profile_completion' %}" style="padding: 0.75rem 1rem; color: var(--text-primary);"><i class="fas fa-building me-2"></i>Complete Company Profile</a></li>
+                            {% endif %}
                             {% else %}
                             <li><a class="dropdown-item" href="{% url 'dashboard' %}" style="padding: 0.75rem 1rem; color: var(--text-primary);"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
                             <li><a class="dropdown-item" href="{% url 'find_jobs' %}" style="padding: 0.75rem 1rem; color: var(--text-primary);"><i class="fas fa-search me-2"></i>Find Jobs</a></li>
@@ -590,15 +594,15 @@
                             <li><hr class="dropdown-divider" style="margin: 0.5rem 0;"></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}" style="padding: 0.75rem 1rem; color: var(--danger);"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
-                    </div>
+        </div>
                 {% else %}
                     <a href="{% url 'login' %}" class="btn btn-secondary">Sign In</a>
                     <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
                 {% endif %}
             </div>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <!-- Main Content -->
     <main>

@@ -227,9 +227,143 @@ def profile_view(request):
 
 
 def career_advice_view(request):
-    """AI-powered career advice view"""
+    """AI-powered career advice view using Gemini"""
     if not request.user.is_authenticated:
         return redirect('login')
+    
+    # Handle resume upload
+    if request.method == 'POST' and 'resume' in request.FILES:
+        print("Resume upload detected")
+        try:
+            profile = request.user.userprofile
+            resume_file = request.FILES['resume']
+            print(f"Resume file: {resume_file.name}, size: {resume_file.size}")
+            
+            # Extract text from resume for AI analysis
+            resume_text = ""
+            try:
+                print(f"Attempting to extract text from: {resume_file.name}")
+                if resume_file.name.lower().endswith('.pdf'):
+                    import PyPDF2
+                    # Reset file pointer to beginning
+                    resume_file.seek(0)
+                    pdf_reader = PyPDF2.PdfReader(resume_file)
+                    print(f"PDF has {len(pdf_reader.pages)} pages")
+                    for page in pdf_reader.pages:
+                        resume_text += page.extract_text()
+                    print(f"Extracted {len(resume_text)} characters from PDF")
+                elif resume_file.name.lower().endswith(('.doc', '.docx')):
+                    import docx
+                    # Reset file pointer to beginning
+                    resume_file.seek(0)
+                    doc = docx.Document(resume_file)
+                    print(f"DOCX has {len(doc.paragraphs)} paragraphs")
+                    for paragraph in doc.paragraphs:
+                        resume_text += paragraph.text + "\n"
+                    print(f"Extracted {len(resume_text)} characters from DOCX")
+                else:
+                    print(f"Unsupported file type: {resume_file.name}")
+            except Exception as e:
+                print(f"Resume text extraction failed: {e}")
+                resume_text = "Resume uploaded but text extraction failed."
+            
+            # Save resume to profile after extraction
+            profile.resume = resume_file
+            profile.save()
+            
+            # Get AI analysis of resume
+            try:
+                from .gemini_chatbot import gemini_chatbot
+                
+                resume_analysis_prompt = f"""
+                Analyze this resume and provide detailed feedback in JSON format ONLY:
+
+                Resume Text:
+                {resume_text[:2000]}
+
+                IMPORTANT: Respond ONLY with valid JSON in this exact format:
+                {{
+                    "ats_score": 85,
+                    "strengths": ["Clear structure", "Relevant experience"],
+                    "improvements": ["Add metrics", "Include keywords"],
+                    "keywords_missing": ["Python", "Django", "API"],
+                    "format_score": 90,
+                    "content_score": 80,
+                    "recommendations": ["Use bullet points", "Add achievements"]
+                }}
+
+                Do not include any text before or after the JSON. Only return the JSON object.
+                """
+                
+                # Convert UserProfile to dictionary format expected by Gemini
+                user_profile_dict = {
+                    'skills': profile.skills or '',
+                    'first_name': profile.first_name or request.user.first_name or 'User',
+                    'resume_text': resume_text,
+                    'db_context': ''
+                }
+                
+                response = gemini_chatbot.generate_response(resume_analysis_prompt, user_profile_dict)
+                print(f"Gemini response type: {response.get('type')}")
+                print(f"Gemini response confidence: {response.get('confidence')}")
+                print(f"Gemini response length: {len(response.get('response', ''))}")
+                if response.get('response'):
+                    print(f"Gemini response preview: {response.get('response')[:200]}...")
+                
+                if response and response.get('response'):
+                    import json
+                    try:
+                        # Clean the response - remove markdown code blocks if present
+                        response_text = response['response'].strip()
+                        if response_text.startswith('```json'):
+                            response_text = response_text[7:]  # Remove ```json
+                        if response_text.startswith('```'):
+                            response_text = response_text[3:]   # Remove ```
+                        if response_text.endswith('```'):
+                            response_text = response_text[:-3]  # Remove trailing ```
+                        response_text = response_text.strip()
+                        print(f"Cleaned resume response: {response_text[:200]}...")
+                        
+                        # Try to parse as JSON
+                        ai_data = json.loads(response_text)
+                        
+                        # Store analysis in session for display
+                        request.session['resume_analysis'] = {
+                            'ats_score': ai_data.get('ats_score', 75),
+                            'strengths': ai_data.get('strengths', []),
+                            'improvements': ai_data.get('improvements', []),
+                            'keywords_missing': ai_data.get('keywords_missing', []),
+                            'format_score': ai_data.get('format_score', 80),
+                            'content_score': ai_data.get('content_score', 75),
+                            'recommendations': ai_data.get('recommendations', [])
+                        }
+                        
+                        messages.success(request, 'Resume analyzed successfully! Check the results below.')
+                        
+                    except json.JSONDecodeError as e:
+                        print(f"JSON decode error: {e}")
+                        print(f"Raw response: {response['response']}")
+                        # Fallback analysis
+                        request.session['resume_analysis'] = {
+                            'ats_score': 75,
+                            'strengths': ['Clear structure', 'Relevant experience', 'Good formatting'],
+                            'improvements': ['Add more quantifiable achievements', 'Include relevant keywords', 'Optimize for ATS'],
+                            'keywords_missing': ['Technical skills', 'Industry terms', 'Action verbs'],
+                            'format_score': 80,
+                            'content_score': 75,
+                            'recommendations': ['Use bullet points', 'Include metrics', 'Add skills section']
+                        }
+                        
+            except Exception as e:
+                print(f"Resume analysis failed: {e}")
+                messages.warning(request, 'Resume uploaded but AI analysis failed. Please try again.')
+            
+            return redirect('career_advice')
+            
+        except Exception as e:
+            print(f"Resume upload failed: {e}")
+            messages.error(request, 'Failed to upload resume. Please try again.')
+            return redirect('career_advice')
     
     try:
         profile = request.user.userprofile
@@ -248,38 +382,147 @@ def career_advice_view(request):
             # Assume work experience starts at 22
             experience_years = max(0, age - 22)
         
-        # Get AI career advice
+        # Initialize AI responses
         career_advice = None
+        profile_insights = None
+        ats_score = None
+        recommendations = None
+        resume_analysis = request.session.get('resume_analysis')
+        
+        # Get AI-powered insights using Gemini
         if user_skills:
             try:
-                from .ai_enhanced import ai_analyzer
-                career_advice = ai_analyzer.generate_career_advice(user_skills, experience_years)
+                from .gemini_chatbot import gemini_chatbot
+                
+                # Create comprehensive prompt for career advice
+                career_prompt = f"""
+                As a career advisor, analyze this user's profile and provide comprehensive career guidance in JSON format ONLY:
+
+                User Profile:
+                - Skills: {', '.join(user_skills)}
+                - Experience Level: {experience_years} years
+                - Name: {profile.first_name or ''} {profile.last_name or ''}
+                - Phone: {profile.phone or 'Not provided'}
+                - Email: {profile.email or 'Not provided'}
+                - Resume Available: {'Yes' if profile.resume else 'No'}
+
+                IMPORTANT: Respond ONLY with valid JSON in this exact format:
+                {{
+                    "profile_completeness": 75,
+                    "market_position": "mid",
+                    "growth_potential": "medium",
+                    "strengths": ["Technical skills", "Problem solving"],
+                    "recommendations": ["Get certified", "Build portfolio"],
+                    "next_steps": ["Update LinkedIn", "Apply to jobs"],
+                    "skill_gaps": ["Cloud", "DevOps"],
+                    "market_insights": ["High demand", "Remote work"],
+                    "ats_score": 80,
+                    "recommendations_list": ["Use keywords", "Add metrics"]
+                }}
+
+                Do not include any text before or after the JSON. Only return the JSON object.
+                Focus on practical, actionable advice for someone with {experience_years} years of experience in {', '.join(user_skills[:3])}.
+                """
+                
+                # Convert UserProfile to dictionary format expected by Gemini
+                user_profile_dict = {
+                    'skills': profile.skills or '',
+                    'first_name': profile.first_name or request.user.first_name or 'User',
+                    'resume_text': '',
+                    'db_context': ''
+                }
+                
+                response = gemini_chatbot.generate_response(career_prompt, user_profile_dict)
+                print(f"Career advice response type: {response.get('type')}")
+                print(f"Career advice response confidence: {response.get('confidence')}")
+                if response.get('response'):
+                    print(f"Career advice response preview: {response.get('response')[:200]}...")
+                
+                if response and response.get('response'):
+                    import json
+                    try:
+                        # Clean the response - remove markdown code blocks if present
+                        response_text = response['response'].strip()
+                        if response_text.startswith('```json'):
+                            response_text = response_text[7:]  # Remove ```json
+                        if response_text.startswith('```'):
+                            response_text = response_text[3:]   # Remove ```
+                        if response_text.endswith('```'):
+                            response_text = response_text[:-3]  # Remove trailing ```
+                        response_text = response_text.strip()
+                        print(f"Cleaned career response: {response_text[:200]}...")
+                        
+                        # Try to parse as JSON
+                        ai_data = json.loads(response_text)
+                        
+                        # Structure the data for template
+                        profile_insights = {
+                            'profile_completeness': ai_data.get('profile_completeness', 75),
+                            'market_position': ai_data.get('market_position', 'mid'),
+                            'growth_potential': ai_data.get('growth_potential', 'medium'),
+                            'strengths': ai_data.get('strengths', [])
+                        }
+                        
+                        career_advice = {
+                            'recommendations': ai_data.get('recommendations', []),
+                            'next_steps': ai_data.get('next_steps', []),
+                            'skill_gaps': ai_data.get('skill_gaps', []),
+                            'market_insights': ai_data.get('market_insights', [])
+                        }
+                        
+                        ats_score = ai_data.get('ats_score', 80)
+                        recommendations = ai_data.get('recommendations_list', [])
+                        
+                    except json.JSONDecodeError as e:
+                        print(f"Career advice JSON decode error: {e}")
+                        print(f"Raw response: {response['response']}")
+                        # Fallback if response isn't valid JSON
+                        profile_insights = {
+                            'profile_completeness': 75,
+                            'market_position': 'mid',
+                            'growth_potential': 'medium',
+                            'strengths': ['Strong technical skills', 'Good problem-solving ability', 'Adaptable to new technologies']
+                        }
+                        
+                        career_advice = {
+                            'recommendations': ['Focus on advanced certifications', 'Build a strong portfolio', 'Network with industry professionals'],
+                            'next_steps': ['Update your LinkedIn profile', 'Apply to relevant positions', 'Attend industry events'],
+                            'skill_gaps': ['Cloud technologies', 'DevOps practices', 'Advanced frameworks'],
+                            'market_insights': ['High demand for full-stack developers', 'Remote work opportunities increasing', 'AI/ML skills becoming essential']
+                        }
+                        
+                        ats_score = 80
+                        recommendations = ['Optimize resume keywords', 'Include quantifiable achievements', 'Use standard section headers']
+                        
             except Exception as e:
-                print(f"AI career advice failed: {e}")
-        
-        # Get profile insights
-        profile_insights = None
-        try:
-            from .ai_enhanced import ai_analyzer
-            profile_data = {
-                'skills': user_skills,
-                'resume': bool(profile.resume),
-                'profile_picture': bool(profile.profile_picture),
-                'phone': bool(profile.phone),
-                'email': bool(profile.email),
-                'first_name': profile.first_name,
-                'last_name': profile.last_name
-            }
-            profile_insights = ai_analyzer.generate_profile_insights(profile_data)
-        except Exception as e:
-            print(f"AI profile insights failed: {e}")
+                print(f"Gemini career advice failed: {e}")
+                # Fallback data
+                profile_insights = {
+                    'profile_completeness': 70,
+                    'market_position': 'mid',
+                    'growth_potential': 'medium',
+                    'strengths': ['Technical proficiency', 'Problem-solving skills', 'Adaptability']
+                }
+                
+                career_advice = {
+                    'recommendations': ['Continue skill development', 'Build professional network', 'Seek mentorship'],
+                    'next_steps': ['Complete profile', 'Upload resume', 'Set job alerts'],
+                    'skill_gaps': ['Advanced technologies', 'Leadership skills', 'Industry certifications'],
+                    'market_insights': ['Growing tech industry', 'Remote work trends', 'Skill-based hiring']
+                }
+                
+                ats_score = 75
+                recommendations = ['Use relevant keywords', 'Include metrics', 'Keep format simple']
         
         context = {
             'career_advice': career_advice,
             'profile_insights': profile_insights,
+            'ats_score': ats_score,
+            'recommendations': recommendations,
+            'resume_analysis': resume_analysis,
             'user_skills': user_skills,
             'experience_years': experience_years,
-            'has_results': bool(career_advice or profile_insights),
+            'has_results': bool(career_advice or profile_insights or resume_analysis),
         }
         
     except UserProfile.DoesNotExist:
@@ -448,10 +691,47 @@ def chatbot_api(request):
         # Get conversation history from session
         conversation_history = request.session.get('chatbot_history', [])
         print(f"Chatbot API: Conversation history: {len(conversation_history)} entries")
+
+        # Optional: enrich context with live DB data for job intents
+        try:
+            q_lower = question.lower()
+            include_jobs = any(k in q_lower for k in [
+                'job', 'jobs', 'opening', 'openings', 'vacancy', 'vacancies', 'hiring', 'apply'
+            ])
+            db_context_parts = []
+            if include_jobs:
+                # Simple relevance: filter by user skills appearing in job title or description
+                from jobs.models import Job
+                skill_terms = []
+                if user_profile_data.get('skills'):
+                    if isinstance(user_profile_data['skills'], str):
+                        skill_terms = [s.strip() for s in user_profile_data['skills'].split(',') if s.strip()]
+                    else:
+                        skill_terms = user_profile_data['skills']
+                jobs_qs = Job.objects.filter(is_active=True).order_by('-created_at')[:50]
+                scored = []
+                for j in jobs_qs:
+                    text = f"{j.title} {getattr(j, 'description', '')} {getattr(j.company, 'name', '')}".lower()
+                    score = sum(1 for s in skill_terms if s and s.lower() in text)
+                    scored.append((score, j))
+                top = [j for score, j in sorted(scored, key=lambda x: x[0], reverse=True)[:5]]
+                if not top:
+                    top = list(jobs_qs[:5])
+                if top:
+                    db_context_parts.append("Top jobs:")
+                    for j in top:
+                        company_name = getattr(j.company, 'name', '') if getattr(j, 'company', None) else ''
+                        loc = getattr(j, 'location', '') if hasattr(j, 'location') else ''
+                        db_context_parts.append(f"- {j.title} | {company_name} | {loc}")
+            if db_context_parts:
+                user_profile_data['db_context'] = "\n".join(db_context_parts)
+        except Exception as e:
+            print(f"Chatbot API: DB enrichment skipped due to error: {e}")
         
         # Generate AI response
         try:
             print("Chatbot API: Generating AI response...")
+            print("Chatbot API: Using Gemini-only chatbot...")
             response = advanced_chatbot.generate_response(question, user_profile_data, conversation_history)
             print(f"Chatbot API: AI response generated: {response}")
         except Exception as e:

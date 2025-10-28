@@ -493,7 +493,7 @@
                                 {% endif %}
                                 <div>
                                     <h1 class="mb-1">{{ company.name }}</h1>
-                                    <p class="mb-0 opacity-90">{{ company.industry }} • {{ company.location }}</p>
+                                    <p class="mb-0 opacity-90">Technology • {{ company.location }}</p>
                                 </div>
                             </div>
                         </div>
@@ -572,6 +572,64 @@
                     {% endif %}
                 </div>
 
+                <!-- AI Company Insights -->
+                {% if ai_insights %}
+                <div class="company-content-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h4 class="company-section-title">
+                                <i class="fas fa-robot me-2" style="color: #1e40af;"></i>AI Company Insights
+                            </h4>
+                            <p class="company-section-subtitle">AI-powered analysis of your hiring performance</p>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <div class="h4 mb-0 text-primary">{{ ai_insights.efficiency_score }}%</div>
+                                <div class="small text-muted">Efficiency Score</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-chart-line me-2 text-success"></i>Hiring Trends</h6>
+                            <ul class="list-unstyled">
+                                {% for trend in ai_insights.hiring_trends %}
+                                    <li><i class="fas fa-arrow-up text-success me-2"></i>{{ trend }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-lightbulb me-2 text-warning"></i>Recommendations</h6>
+                            <ul class="list-unstyled">
+                                {% for rec in ai_insights.recommendations %}
+                                    <li><i class="fas fa-check text-primary me-2"></i>{{ rec }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-rocket me-2 text-info"></i>Growth Opportunities</h6>
+                            <ul class="list-unstyled">
+                                {% for opp in ai_insights.growth_opportunities %}
+                                    <li><i class="fas fa-star text-warning me-2"></i>{{ opp }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-list-check me-2 text-primary"></i>Next Steps</h6>
+                            <ul class="list-unstyled">
+                                {% for step in ai_insights.next_steps %}
+                                    <li><i class="fas fa-arrow-right text-success me-2"></i>{{ step }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Recent Applications -->
                 <div class="company-content-section">
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -625,39 +683,38 @@
                         </button>
                     </div>
                     
-                    <!-- AI Job Description Assistant -->
+                    <!-- AI-Powered Job Posting Generator -->
                     <div class="company-content-section mb-4">
                         <div class="company-stat-card">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="me-3">
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);">
-                                        <i class="fas fa-robot text-white" style="font-size: 1.2rem;"></i>
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                                        <i class="fas fa-magic text-white" style="font-size: 1.2rem;"></i>
                                     </div>
                                 </div>
                                 <div>
-                                    <h5 class="company-section-title mb-1">AI Job Description Assistant</h5>
-                                    <p class="company-section-subtitle mb-0">Get AI-powered suggestions for skills, salary, and inclusive language</p>
+                                    <h5 class="company-section-title mb-1">AI Job Posting Generator</h5>
+                                    <p class="company-section-subtitle mb-0">Describe your job in natural language and let AI fill all the fields</p>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <button class="company-btn-primary btn-sm w-100" onclick="getAISkillsSuggestions()">
-                                        <i class="fas fa-lightbulb me-2"></i>Get Skills Suggestions
-                                    </button>
-                                </div>
-                                <div class="col-md-4">
-                                    <button class="company-btn-primary btn-sm w-100" onclick="getMarketSalary()">
-                                        <i class="fas fa-dollar-sign me-2"></i>Market Salary Range
-                                    </button>
-                                </div>
-                                <div class="col-md-4">
-                                    <button class="company-btn-primary btn-sm w-100" onclick="checkInclusiveLanguage()">
-                                        <i class="fas fa-heart me-2"></i>Check Inclusive Language
-                                    </button>
-                                </div>
+                            
+                            <div class="mb-3">
+                                <label class="company-form-label">Describe the job you want to post:</label>
+                                <textarea id="aiJobPrompt" class="company-form-control" rows="3" placeholder="e.g., We need a senior Python developer with Django experience to work on our web application. Should have 5+ years experience, know AWS, and be comfortable with remote work. Looking for someone who can lead a team and mentor junior developers."></textarea>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button class="company-btn-primary" onclick="generateAIJobPosting()">
+                                    <i class="fas fa-magic me-2"></i>Generate Job Posting
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="clearAIForm()">
+                                    <i class="fas fa-eraser me-2"></i>Clear
+                                </button>
                             </div>
                         </div>
                     </div>
+
+                   
 
                     <form method="POST" action="{% url 'post_job' %}">
                         {% csrf_token %}
@@ -859,11 +916,11 @@
                                                 <small class="text-muted">AI Score</small>
                                             </div>
                                             <div class="progress" style="height: 6px; width: 60px;">
-                                                <div class="progress-bar {% if forloop.counter <= 3 %}bg-success{% elif forloop.counter <= 6 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                                     style="width: {{ 95|add:forloop.counter|add:"-5" }}%"></div>
+                                                <div class="progress-bar {% if application.ai_match_score >= 80 %}bg-success{% elif application.ai_match_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                     style="width: {{ application.ai_match_score }}%"></div>
                                             </div>
-                                            <small class="fw-bold {% if forloop.counter <= 3 %}text-success{% elif forloop.counter <= 6 %}text-warning{% else %}text-danger{% endif %}">
-                                                {{ 95|add:forloop.counter|add:"-5" }}%
+                                            <small class="fw-bold {% if application.ai_match_score >= 80 %}text-success{% elif application.ai_match_score >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                                {{ application.ai_match_score }}%
                                             </small>
                                         </div>
                                     </div>
@@ -995,7 +1052,7 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <p><strong>Company Name:</strong> {{ company.name }}</p>
-                                        <p><strong>Industry:</strong> {{ company.industry }}</p>
+                                        <p><strong>Industry:</strong> Technology</p>
                                         <p><strong>Location:</strong> {{ company.location }}</p>
                                     </div>
                                     <div class="col-md-6">
@@ -1025,7 +1082,7 @@
                                     </div>
                                 {% endif %}
                                 <h6>{{ company.name }}</h6>
-                                <p class="text-muted">{{ company.industry }}</p>
+                                <p class="text-muted">Technology</p>
                             </div>
                         </div>
                     </div>
@@ -1141,7 +1198,7 @@ function updateApplicationStatus(applicationId, status) {
 }
 
 function showAISummary(applicationId) {
-    // AI Summary Modal
+    // Show loading modal
     const modal = document.createElement('div');
     modal.className = 'modal fade';
     modal.innerHTML = `
@@ -1153,37 +1210,12 @@ function showAISummary(applicationId) {
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-chart-line me-2 text-success"></i>Strengths</h6>
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-check text-success me-2"></i>Strong technical background in Python/Django</li>
-                                <li><i class="fas fa-check text-success me-2"></i>3+ years of relevant experience</li>
-                                <li><i class="fas fa-check text-success me-2"></i>Active on professional networks</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Areas to Consider</h6>
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-info-circle text-warning me-2"></i>Limited experience with cloud platforms</li>
-                                <li><i class="fas fa-info-circle text-warning me-2"></i>Could benefit from leadership experience</li>
-                            </ul>
-                        </div>
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-                    <div class="mt-3">
-                        <h6><i class="fas fa-lightbulb me-2 text-primary"></i>AI Recommendation</h6>
-                        <div class="alert alert-info">
-                            <strong>High Potential:</strong> This candidate shows strong technical skills and cultural fit. 
-                            Recommend for technical interview focusing on problem-solving and system design.
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="scheduleWithAI(${applicationId})">
-                        <i class="fas fa-calendar-plus me-1"></i>Schedule Interview
-                    </button>
+                    <h5>AI is analyzing the candidate...</h5>
+                    <p class="text-muted">This may take a few seconds</p>
                 </div>
             </div>
         </div>
@@ -1192,14 +1224,119 @@ function showAISummary(applicationId) {
     const bsModal = new bootstrap.Modal(modal);
     bsModal.show();
     
-    // Remove modal from DOM when hidden
+    // Call AI API
+    fetch('/api/company/ai/candidate-analysis/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+            application_id: applicationId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const analysis = data.analysis;
+            
+            // Update modal with AI results
+            modal.querySelector('.modal-body').innerHTML = `
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-primary">${analysis.match_score}%</div>
+                            <div class="small text-muted">Match Score</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <div class="h5 mb-0 text-success">$${analysis.salary_expectation.min.toLocaleString()} - $${analysis.salary_expectation.max.toLocaleString()}</div>
+                            <div class="small text-muted">Expected Salary</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chart-line me-2 text-success"></i>Strengths</h6>
+                        <ul class="list-unstyled">
+                            ${analysis.strengths.map(strength => `<li><i class="fas fa-check text-success me-2"></i>${strength}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Areas to Consider</h6>
+                        <ul class="list-unstyled">
+                            ${analysis.concerns.map(concern => `<li><i class="fas fa-info-circle text-warning me-2"></i>${concern}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6><i class="fas fa-lightbulb me-2 text-primary"></i>AI Recommendation</h6>
+                    <div class="alert alert-info">
+                        <strong>${analysis.recommendation}</strong>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-target me-2 text-info"></i>Interview Focus</h6>
+                        <ul class="list-unstyled">
+                            ${analysis.interview_focus.map(focus => `<li><i class="fas fa-arrow-right text-primary me-2"></i>${focus}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-clock me-2 text-warning"></i>Hiring Timeline</h6>
+                        <p class="mb-1"><strong>${analysis.hiring_timeline}</strong></p>
+                        <small class="text-muted">Expected time to hire</small>
+                    </div>
+                </div>
+                
+                ${analysis.risk_factors ? `
+                <div class="mt-3">
+                    <h6><i class="fas fa-exclamation-circle me-2 text-danger"></i>Risk Factors</h6>
+                    <ul class="list-unstyled">
+                        ${analysis.risk_factors.map(risk => `<li><i class="fas fa-warning text-warning me-2"></i>${risk}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+            `;
+            
+            // Add footer with schedule button
+            modal.querySelector('.modal-content').innerHTML += `
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="scheduleWithAI(${applicationId})">
+                        <i class="fas fa-calendar-plus me-1"></i>Schedule Interview
+                    </button>
+                </div>
+            `;
+        } else {
+            modal.querySelector('.modal-body').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${data.error || 'Failed to analyze candidate'}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        modal.querySelector('.modal-body').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> Failed to connect to AI service
+            </div>
+        `;
+    });
+    
     modal.addEventListener('hidden.bs.modal', () => {
         document.body.removeChild(modal);
     });
 }
 
 function scheduleWithAI(applicationId) {
-    // AI Interview Scheduler
+    // Show loading modal
     const modal = document.createElement('div');
     modal.className = 'modal fade';
     modal.innerHTML = `
@@ -1211,22 +1348,12 @@ function scheduleWithAI(applicationId) {
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-robot fa-3x text-primary mb-3"></i>
-                        <h5>AI is finding the best time for your interview</h5>
-                        <p class="text-muted">Our AI will coordinate with the candidate to find a mutually convenient time.</p>
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>AI Process:</strong> The AI will analyze both calendars, suggest optimal times, 
-                        send calendar invites, and send confirmation emails to all parties.
-                    </div>
-                    <div class="d-grid">
-                        <button class="btn btn-primary" onclick="startAIScheduling(${applicationId})">
-                            <i class="fas fa-magic me-2"></i>Start AI Scheduling
-                        </button>
-                    </div>
+                    <h5>AI is finding the best time for your interview...</h5>
+                    <p class="text-muted">This may take a few seconds</p>
                 </div>
             </div>
         </div>
@@ -1234,6 +1361,94 @@ function scheduleWithAI(applicationId) {
     document.body.appendChild(modal);
     const bsModal = new bootstrap.Modal(modal);
     bsModal.show();
+    
+    // Call AI API
+    fetch('/api/company/ai/interview-scheduler/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+            application_id: applicationId,
+            preferred_times: ['Monday 2:00 PM', 'Tuesday 10:00 AM', 'Wednesday 3:00 PM']
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const scheduling = data.scheduling;
+            
+            // Update modal with AI results
+            modal.querySelector('.modal-body').innerHTML = `
+                <div class="text-center mb-4">
+                    <i class="fas fa-calendar-check fa-3x text-success mb-3"></i>
+                    <h5>AI has found optimal interview times</h5>
+                    <p class="text-muted">Here are the best times for your interview:</p>
+                </div>
+                
+                <div class="alert alert-success">
+                    <i class="fas fa-star me-2"></i>
+                    <strong>Recommended:</strong> ${scheduling.best_time}
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-clock me-2 text-primary"></i>Suggested Times</h6>
+                    <ul class="list-unstyled">
+                        ${scheduling.suggested_times.map(time => `<li><i class="fas fa-calendar me-2 text-primary"></i>${time}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-hourglass-half me-2 text-info"></i>Duration</h6>
+                        <p class="mb-0"><strong>${scheduling.interview_duration}</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-video me-2 text-success"></i>Format</h6>
+                        <p class="mb-0"><strong>${scheduling.interview_format}</strong></p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-lightbulb me-2 text-warning"></i>Preparation Tips</h6>
+                    <ul class="list-unstyled">
+                        ${scheduling.preparation_tips.map(tip => `<li><i class="fas fa-check text-success me-2"></i>${tip}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>AI Reasoning:</strong> ${scheduling.reasoning}
+                </div>
+            `;
+            
+            // Add footer with action buttons
+            modal.querySelector('.modal-content').innerHTML += `
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="startAIScheduling(${applicationId})">
+                        <i class="fas fa-magic me-1"></i>Start AI Scheduling
+                    </button>
+                </div>
+            `;
+        } else {
+            modal.querySelector('.modal-body').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${data.error || 'Failed to get scheduling suggestions'}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        modal.querySelector('.modal-body').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> Failed to connect to AI service
+            </div>
+        `;
+    });
     
     modal.addEventListener('hidden.bs.modal', () => {
         document.body.removeChild(modal);
@@ -1256,59 +1471,33 @@ function startAIScheduling(applicationId) {
     }, 3000);
 }
 
-// AI Job Description Assistant Functions
-function getAISkillsSuggestions() {
+// AI Job Posting Generator Functions
+function generateAIJobPosting() {
+    const jobPrompt = document.getElementById('aiJobPrompt').value.trim();
+    
+    if (!jobPrompt) {
+        alert('Please describe the job you want to post.');
+        return;
+    }
+    
+    // Show loading modal
     const modal = document.createElement('div');
     modal.className = 'modal fade';
     modal.innerHTML = `
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white;">
                     <h5 class="modal-title">
-                        <i class="fas fa-lightbulb me-2"></i>AI Skills Suggestions
+                        <i class="fas fa-magic me-2"></i>AI Job Posting Generator
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-robot me-2"></i>
-                        <strong>AI Analysis:</strong> Based on similar successful job postings, here are the most in-demand skills:
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-success mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-star me-2 text-warning"></i>Essential Skills</h6>
-                            <div class="d-flex flex-wrap gap-2">
-                                <span class="badge bg-primary">Python</span>
-                                <span class="badge bg-primary">Django</span>
-                                <span class="badge bg-primary">PostgreSQL</span>
-                                <span class="badge bg-primary">AWS</span>
-                                <span class="badge bg-primary">Docker</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-plus me-2 text-success"></i>Nice to Have</h6>
-                            <div class="d-flex flex-wrap gap-2">
-                                <span class="badge bg-secondary">React</span>
-                                <span class="badge bg-secondary">Kubernetes</span>
-                                <span class="badge bg-secondary">GraphQL</span>
-                                <span class="badge bg-secondary">Redis</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <h6><i class="fas fa-chart-line me-2 text-info"></i>Market Trends</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-arrow-up text-success me-2"></i>Cloud skills are in high demand (+45% this year)</li>
-                            <li><i class="fas fa-arrow-up text-success me-2"></i>DevOps experience is increasingly valuable</li>
-                            <li><i class="fas fa-arrow-up text-success me-2"></i>Remote work experience is a plus</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="applySkillsSuggestions()">
-                        <i class="fas fa-magic me-1"></i>Apply Suggestions
-                    </button>
+                    <h5>AI is generating your job posting...</h5>
+                    <p class="text-muted">This may take a few seconds</p>
                 </div>
             </div>
         </div>
@@ -1317,10 +1506,203 @@ function getAISkillsSuggestions() {
     const bsModal = new bootstrap.Modal(modal);
     bsModal.show();
     
-    modal.addEventListener('hidden.bs.modal', () => {
-        document.body.removeChild(modal);
+    // Call AI API
+    fetch('/api/company/ai/generate-job-posting/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+            job_prompt: jobPrompt,
+            company_context: {
+                skills: '{{ company.industry }}'
+            }
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const jobData = data.job_data;
+            
+            // Update modal with AI results
+            modal.querySelector('.modal-body').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Job posting generated successfully!</strong> Review the details below and click "Fill Form" to populate the job posting form.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-briefcase me-2 text-primary"></i>Job Details</h6>
+                        <p><strong>Title:</strong> ${jobData.title}</p>
+                        <p><strong>Location:</strong> ${jobData.location}</p>
+                        <p><strong>Employment Type:</strong> ${jobData.employment_type}</p>
+                        <p><strong>Experience Level:</strong> ${jobData.experience_level}</p>
+                        <p><strong>Remote Work:</strong> ${jobData.remote_work}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-dollar-sign me-2 text-success"></i>Compensation</h6>
+                        <p><strong>Salary Range:</strong> $${jobData.salary_range.min.toLocaleString()} - $${jobData.salary_range.max.toLocaleString()}</p>
+                        <p><strong>Currency:</strong> ${jobData.salary_range.currency}</p>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6><i class="fas fa-tasks me-2 text-info"></i>Required Skills</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${jobData.skills_required.map(skill => `<span class="badge bg-primary">${skill}</span>`).join('')}
+                    </div>
+                </div>
+                
+                ${jobData.nice_to_have && jobData.nice_to_have.length > 0 ? `
+                <div class="mt-3">
+                    <h6><i class="fas fa-plus me-2 text-secondary"></i>Nice to Have</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${jobData.nice_to_have.map(skill => `<span class="badge bg-secondary">${skill}</span>`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="mt-3">
+                    <h6><i class="fas fa-file-text me-2 text-warning"></i>Description Preview</h6>
+                    <div class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                        <small>${jobData.description}</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6><i class="fas fa-list me-2 text-info"></i>Requirements Preview</h6>
+                    <div class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                        <small style="white-space: pre-line;">${jobData.requirements}</small>
+                    </div>
+                </div>
+            `;
+            
+            // Store jobData globally and use a simpler onclick
+            window.currentJobData = jobData;
+            
+            // Add footer with action buttons
+            modal.querySelector('.modal-content').innerHTML += `
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="fillJobForm(window.currentJobData)">
+                        <i class="fas fa-magic me-2"></i>Fill Form
+                    </button>
+                </div>
+            `;
+        } else {
+            modal.querySelector('.modal-body').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${data.error || 'Failed to generate job posting'}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        modal.querySelector('.modal-body').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> Failed to generate job posting. Please try again.
+            </div>
+        `;
     });
 }
+
+function fillJobForm(jobData) {
+    console.log('fillJobForm called with:', jobData);
+    
+    if (!jobData) {
+        console.error('No job data provided');
+        alert('No job data available to fill the form');
+        return;
+    }
+    
+    try {
+        // Fill the form fields with AI-generated data
+        const titleField = document.querySelector('input[name="title"]');
+        const locationField = document.querySelector('input[name="location"]');
+        const descriptionField = document.querySelector('textarea[name="description"]');
+        const salaryField = document.querySelector('input[name="salary_range"]');
+        
+        if (titleField) titleField.value = jobData.title || '';
+        if (locationField) locationField.value = jobData.location || '';
+        if (descriptionField) descriptionField.value = jobData.description || '';
+        
+        if (salaryField && jobData.salary_range) {
+            salaryField.value = `$${jobData.salary_range.min.toLocaleString()} - $${jobData.salary_range.max.toLocaleString()}`;
+        }
+        
+        // Set employment type
+        const employmentTypeMap = {
+            'Full-time': 'full_time',
+            'Part-time': 'part_time',
+            'Contract': 'contract',
+            'Internship': 'internship'
+        };
+        const employmentSelect = document.querySelector('select[name="employment_type"]');
+        if (employmentSelect) {
+            employmentSelect.value = employmentTypeMap[jobData.employment_type] || 'full_time';
+        }
+        
+        // Set experience level
+        const experienceLevelMap = {
+            'Entry': 'entry',
+            'Junior': 'entry',
+            'Mid-level': 'mid',
+            'Senior': 'senior',
+            'Executive': 'executive'
+        };
+        const experienceSelect = document.querySelector('select[name="experience_level"]');
+        if (experienceSelect) {
+            experienceSelect.value = experienceLevelMap[jobData.experience_level] || 'mid';
+        }
+        
+        // Fill requirements if there's a requirements field
+        const requirementsField = document.querySelector('textarea[name="requirements"]');
+        if (requirementsField) {
+            requirementsField.value = jobData.requirements || '';
+        }
+        
+        console.log('Form filled successfully');
+        
+        // Close the modal
+        bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+        
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0';
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>Job posting form filled successfully!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        // Remove toast after it's hidden
+        toast.addEventListener('hidden.bs.toast', () => {
+            document.body.removeChild(toast);
+        });
+        
+    } catch (error) {
+        console.error('Error filling form:', error);
+        alert('Error filling form: ' + error.message);
+    }
+}
+
+function clearAIForm() {
+    document.getElementById('aiJobPrompt').value = '';
+}
+
+// AI Job Description Assistant Functions
+
 
 function getMarketSalary() {
     const modal = document.createElement('div');

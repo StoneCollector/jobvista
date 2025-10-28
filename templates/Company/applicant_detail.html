@@ -551,14 +551,28 @@
                                 <div class="progress me-3" style="width: 200px; height: 20px; background: #e2e8f0;">
                                     <div class="progress-bar {% if match_score >= 70 %}bg-success{% elif match_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
                                          role="progressbar" style="width: {{ match_score }}%" aria-valuenow="{{ match_score }}" aria-valuemin="0" aria-valuemax="100">
-                                    </div>
-                                </div>
+          </div>
+                </div>
                                 <span class="fw-bold {% if match_score >= 70 %}text-success{% elif match_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
                                     {{ match_score }}% Match
                                 </span>
+                </div>
+            </div>
+                    </div>
+                    
+                    <!-- AI Recommendation -->
+                    {% if recommendation %}
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-lightbulb me-2" style="color: #1e40af;"></i>AI Recommendation
+                        </div>
+                        <div class="info-value">
+                            <div class="alert {% if match_score >= 70 %}alert-success{% elif match_score >= 50 %}alert-warning{% else %}alert-danger{% endif %} mb-0">
+                                <i class="fas fa-robot me-2"></i>{{ recommendation }}
           </div>
         </div>
       </div>
+                    {% endif %}
                     
                     <!-- Skills Analysis -->
                     <div class="row">
@@ -614,6 +628,130 @@
                             {% endif %}
                         </div>
                     </div>
+                    
+                    <!-- Comprehensive AI Analysis -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">
+                                    <i class="fas fa-chart-line me-2 text-success"></i>Strengths
+                                </div>
+                                <div class="info-value">
+                                    {% if strengths %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for strength in strengths %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-check text-success me-2"></i>{{ strength }}
+                                                </li>
+                                            {% endfor %}
+            </ul>
+                                    {% else %}
+                                        <span class="text-muted">No specific strengths identified</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+          </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">
+                                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Areas to Consider
+                </div>
+                                <div class="info-value">
+                                    {% if concerns %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for concern in concerns %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-info-circle text-warning me-2"></i>{{ concern }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="text-success">No major concerns identified</span>
+                                    {% endif %}
+                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Interview Focus & Salary -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">
+                                    <i class="fas fa-target me-2 text-info"></i>Interview Focus
+                                </div>
+                                <div class="info-value">
+                                    {% if interview_focus %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for focus in interview_focus %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-arrow-right text-primary me-2"></i>{{ focus }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="text-muted">Standard interview process</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">
+                                    <i class="fas fa-dollar-sign me-2 text-success"></i>Expected Salary
+                                </div>
+                                <div class="info-value">
+                                    {% if salary_expectation %}
+                                        <div class="h5 mb-0 text-success">
+                                            ${{ salary_expectation.min|floatformat:0|add:0|floatformat:0 }} - ${{ salary_expectation.max|floatformat:0|add:0|floatformat:0 }}
+                                        </div>
+                                        <small class="text-muted">AI-estimated salary range</small>
+                                    {% else %}
+                                        <span class="text-muted">Salary range not available</span>
+                                    {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+                    
+                    <!-- Hiring Timeline & Risk Factors -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">
+                                    <i class="fas fa-clock me-2 text-warning"></i>Hiring Timeline
+                                </div>
+                                <div class="info-value">
+                                    {% if hiring_timeline %}
+                                        <div class="h6 mb-0 text-primary">{{ hiring_timeline }}</div>
+                                        <small class="text-muted">Expected time to hire</small>
+                                    {% else %}
+                                        <span class="text-muted">Timeline not specified</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">
+                                    <i class="fas fa-exclamation-circle me-2 text-danger"></i>Risk Factors
+                                </div>
+                                <div class="info-value">
+                                    {% if risk_factors %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for risk in risk_factors %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-warning text-warning me-2"></i>{{ risk }}
+                                                </li>
+               {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="text-success">No significant risk factors</span>
+                                    {% endif %}
+         </div>
+                </div>
+            </div>
+        </div>
                     
                     <!-- AI Summary -->
                     <div class="info-card">

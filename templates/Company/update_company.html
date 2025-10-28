@@ -1,52 +1,271 @@
 {% extends 'base.html' %}
 {% block title %}Update Company - JobVista{% endblock %}
-{% block content %}
-<div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
-  <div class="max-w-3xl mx-auto">
-    <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold" style="color: var(--text-heading);">Update Company</h2>
-        <div class="flex items-center gap-3">
-          {% if company.logo %}
-            <img src="{{ company.logo.url }}" class="w-10 h-10 rounded-lg object-contain border bg-white p-1" style="border-color: var(--border);" alt="{{ company.name }}"/>
-          {% endif %}
-          <span class="text-sm text-gray-600">Status: <span class="pill">{{ company.get_status_display|default:company.status }}</span></span>
-        </div>
-      </div>
 
-      <form method="POST" enctype="multipart/form-data" class="space-y-4">
-        {% csrf_token %}
-        <div>
-          <label class="block text-sm font-medium mb-1">Company Name</label>
-          <input type="text" name="name" value="{{ company.name }}" class="input w-full" required />
+{% block extra_css %}
+<style>
+    .company-update-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 0;
+    }
+    
+    .company-update-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .company-update-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .company-update-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .company-status {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .company-logo-preview {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .status-approved {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    .status-pending {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+    
+    .status-rejected {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        background: white;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .btn-cancel {
+        padding: 0.875rem 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        background: white;
+        color: #64748b;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-cancel:hover {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+        color: #475569;
+        text-decoration: none;
+    }
+    
+    .btn-save {
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .current-logo {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+    
+    .current-logo a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .current-logo a:hover {
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+        .company-update-card {
+            padding: 2rem;
+            margin: 1rem;
+        }
+        
+        .company-update-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .company-status {
+            align-self: flex-end;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-cancel,
+        .btn-save {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="company-update-container">
+    <div class="container">
+        <div class="company-update-card">
+            <div class="company-update-header">
+                <h1 class="company-update-title">Update Company Profile</h1>
+                <div class="company-status">
+                    {% if company.logo %}
+                        <img src="{{ company.logo.url }}" class="company-logo-preview" alt="{{ company.name }}"/>
+                    {% endif %}
+                    <span class="status-badge status-{{ company.status }}">
+                        {{ company.get_status_display|default:company.status }}
+                    </span>
+                </div>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label">Company Name</label>
+                    <input type="text" name="name" value="{{ company.name }}" class="form-control" placeholder="Enter company name" required />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" rows="4" class="form-control" placeholder="Brief description of your company">{{ company.description }}</textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Website</label>
+                            <input type="url" name="website" value="{{ company.website }}" class="form-control" placeholder="https://example.com" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input type="text" name="location" value="{{ company.location }}" class="form-control" placeholder="e.g. Mumbai, India" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Company Logo</label>
+                    <input type="file" name="logo" class="form-control" accept="image/*" />
+                    {% if company.logo %}
+                        <div class="current-logo">
+                            Current logo: <a href="{{ company.logo.url }}" target="_blank">View current logo</a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{% url 'company_view' %}" class="btn-cancel">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Description</label>
-          <textarea name="description" rows="4" class="input w-full" placeholder="Brief description">{{ company.description }}</textarea>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Website</label>
-            <input type="url" name="website" value="{{ company.website }}" class="input w-full" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Location</label>
-            <input type="text" name="location" value="{{ company.location }}" class="input w-full" />
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Logo</label>
-          <input type="file" name="logo" class="input w-full" />
-          {% if company.logo %}
-            <p class="text-xs text-gray-500 mt-1">Current: <a href="{{ company.logo.url }}" target="_blank" class="link">View</a></p>
-          {% endif %}
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
-          <a href="{% url 'company_view' %}" class="btn-secondary-brand px-4 py-2 rounded-md">Cancel</a>
-          <button type="submit" class="btn-primary-brand px-5 py-2 rounded-md">Save Changes</button>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
 {% endblock %}

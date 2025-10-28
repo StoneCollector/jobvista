@@ -114,6 +114,7 @@ class ApplyForJob(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applied')
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applied')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    ai_match_score = models.IntegerField(default=0, help_text="AI-calculated match score (0-100)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

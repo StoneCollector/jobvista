@@ -1,31 +1,309 @@
 {% extends 'base.html' %}
 {% block title %}Complete Company Profile - JobVista{% endblock %}
-{% block content %}
-<div class="w-full px-6 lg:px-10 py-8" style="background: radial-gradient(1600px 900px at -10% -20%, #EEF2FF, transparent), radial-gradient(1400px 800px at 120% 0%, #F5F7FF, transparent);">
-  <div class="max-w-3xl mx-auto">
-    <div class="backdrop-blur bg-white/60 border rounded-2xl p-6 card-shadow" style="border-color:#ffffff33;">
-      <h2 class="text-xl font-semibold mb-2" style="color: var(--text-heading);">Complete Your Company Setup</h2>
-      <p class="text-gray-600 text-sm mb-4">Choose to submit a new company for approval, or join an existing approved company.</p>
 
-      <form method="post" class="space-y-5">
-        {% csrf_token %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button type="submit" name="action" value="new_company" class="btn-primary-brand px-5 py-3 rounded-md">Add a New Company</button>
-          <div class="flex items-end gap-2">
-            <div class="flex-1">
-              <label class="block text-sm font-medium mb-1">Select an existing company</label>
-              <select name="company_id" class="input w-full">
-                <option value="">-- Select Company --</option>
-                {% for company in companies %}
-                  <option value="{{ company.id }}">{{ company.name }}</option>
-                {% endfor %}
-              </select>
+{% block extra_css %}
+<style>
+    .company-setup-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 0;
+    }
+    
+    .company-setup-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .company-setup-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .company-setup-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .company-setup-subtitle {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin-bottom: 0;
+    }
+    
+    .company-setup-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .company-option-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .company-option-card:hover {
+        border-color: #667eea;
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+    }
+    
+    .company-option-card.new-company {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+    
+    .company-option-card.existing-company {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    }
+    
+    .option-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .option-icon.new {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .option-icon.existing {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    
+    .option-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+    }
+    
+    .option-description {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .option-button {
+        width: 100%;
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .option-button.new {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    .option-button.new:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+    }
+    
+    .option-button.existing {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+    }
+    
+    .option-button.existing:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .company-select-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .company-select-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .company-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        background: white;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    
+    .company-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    
+    .join-button {
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .join-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+    }
+    
+    .join-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    @media (max-width: 768px) {
+        .company-setup-options {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .company-setup-card {
+            padding: 2rem;
+            margin: 1rem;
+        }
+        
+        .company-setup-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="company-setup-container">
+    <div class="container">
+        <div class="company-setup-card">
+            <div class="company-setup-header">
+                <h1 class="company-setup-title">Complete Your Company Setup</h1>
+                <p class="company-setup-subtitle">Choose how you'd like to proceed with your company profile</p>
             </div>
-            <button type="submit" name="action" value="existing_company" class="btn-secondary-brand px-4 py-3 rounded-md">Join</button>
-          </div>
+            
+            <form method="post" id="companySetupForm">
+                {% csrf_token %}
+                <div class="company-setup-options">
+                    <!-- New Company Option -->
+                    <div class="company-option-card new-company" onclick="selectOption('new')">
+                        <div class="option-icon new">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <h3 class="option-title">Create New Company</h3>
+                        <p class="option-description">
+                            Submit a new company profile for approval. This is perfect if you're representing a new company or startup.
+                        </p>
+                        <button type="submit" name="action" value="new_company" class="option-button new">
+                            <i class="fas fa-building me-2"></i>Create New Company
+                        </button>
+                    </div>
+                    
+                    <!-- Existing Company Option -->
+                    <div class="company-option-card existing-company" onclick="selectOption('existing')">
+                        <div class="option-icon existing">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <h3 class="option-title">Join Existing Company</h3>
+                        <p class="option-description">
+                            Join an already approved company. Select from the list of verified companies below.
+                        </p>
+                        
+                        <div class="company-select-section">
+                            <label class="company-select-label">Select Company</label>
+                            <select name="company_id" class="company-select" id="companySelect">
+                                <option value="">-- Choose a Company --</option>
+                                {% for company in companies %}
+                                    <option value="{{ company.id }}">{{ company.name }} - {{ company.location }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" name="action" value="existing_company" class="join-button" id="joinButton" disabled>
+                                <i class="fas fa-user-plus me-2"></i>Join Company
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
 </div>
+
+<script>
+function selectOption(type) {
+    // Remove active class from all cards
+    document.querySelectorAll('.company-option-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    
+    // Add active class to selected card
+    if (type === 'new') {
+        document.querySelector('.new-company').classList.add('active');
+    } else {
+        document.querySelector('.existing-company').classList.add('active');
+    }
+}
+
+// Enable/disable join button based on company selection
+document.getElementById('companySelect').addEventListener('change', function() {
+    const joinButton = document.getElementById('joinButton');
+    if (this.value) {
+        joinButton.disabled = false;
+        joinButton.style.opacity = '1';
+    } else {
+        joinButton.disabled = true;
+        joinButton.style.opacity = '0.5';
+    }
+});
+
+// Add some interactive effects
+document.querySelectorAll('.company-option-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-4px)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        if (!this.classList.contains('active')) {
+            this.style.transform = 'translateY(0)';
+        }
+    });
+});
+</script>
 {% endblock %}
